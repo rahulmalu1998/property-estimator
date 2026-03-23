@@ -50,10 +50,23 @@
     }).format(n);
   }
 
+  function formatPct(n, digits) {
+    if (typeof n !== "number" || !Number.isFinite(n)) return "—";
+    return n.toFixed(digits) + "%";
+  }
+
   function formatSigned(n, digits) {
     if (typeof n !== "number" || !Number.isFinite(n)) return "—";
     const value = n.toFixed(digits);
     return n > 0 ? "+" + value : value;
+  }
+
+  function investmentScore(area) {
+    return area.investment?.score ?? Number.NEGATIVE_INFINITY;
+  }
+
+  function investmentScoreLabel(area) {
+    return area.investment?.score != null ? area.investment.score.toFixed(1) + " / 100" : "—";
   }
 
   function esc(s) {
@@ -142,6 +155,9 @@
 
   function rankAreas(areas) {
     return [...areas].sort((a, b) => {
+      const scoreA = investmentScore(a);
+      const scoreB = investmentScore(b);
+      if (scoreB !== scoreA) return scoreB - scoreA;
       const growthA = a.summary.growth ?? Number.NEGATIVE_INFINITY;
       const growthB = b.summary.growth ?? Number.NEGATIVE_INFINITY;
       if (growthB !== growthA) return growthB - growthA;
@@ -241,6 +257,7 @@
     const summary = area.summary || {};
     const yearValue = getYearValue(area, state.activeYear);
     const delta = computeYearDelta(area, state.activeYear);
+    const metrics = area.investment?.metrics || {};
     return (
       "<strong>" +
       esc(area.name) +
@@ -249,7 +266,20 @@
       '</span><br><span class="popup-price">' +
       esc(formatInr(area.pricePerSqft)) +
       "</span> / sqft" +
-      '<div class="popup-model"><strong>Development</strong><br/>' +
+      '<div class="popup-model"><strong>Investment</strong><br/>' +
+      "Score: " +
+      esc(investmentScoreLabel(area)) +
+      "<br/>Rental yield: " +
+      esc(formatPct(metrics.rentalYieldPct, 1)) +
+      "<br/>5Y rent growth: " +
+      esc(formatPct(metrics.rentGrowth5yPct, 0)) +
+      "<br/>Demand strength: " +
+      esc(String(metrics.demandStrength ?? "—")) +
+      "<br/>Employment strength: " +
+      esc(String(metrics.employmentStrength ?? "—")) +
+      "<br/>Risk penalty: " +
+      esc(String(metrics.riskPenalty ?? "—")) +
+      '<br/><br/><strong>Development</strong><br/>' +
       "Year " +
       state.activeYear +
       ": " +
@@ -268,9 +298,11 @@
 
   function renderTopStats(areas) {
     const ranked = rankAreas(areas);
-    const meanPrice = areas.reduce((sum, area) => sum + area.pricePerSqft, 0) / areas.length;
     const strongest = ranked[0];
     const selectedCities = state.cities.filter((city) => state.selectedCitySlugs.includes(city.slug));
+    const meanYield =
+      areas.reduce((sum, area) => sum + (area.investment?.metrics?.rentalYieldPct ?? 0), 0) /
+      areas.length;
 
     els.topStats.innerHTML = [
       {
@@ -286,16 +318,16 @@
                 String(selectedCities.length - 3),
       },
       {
-        label: "Average price",
-        value: formatInr(Math.round(meanPrice)),
-        note: "Modeled citywide midpoint",
+        label: "Average rental yield",
+        value: formatPct(meanYield, 1),
+        note: "Gross yield across selected localities",
       },
       {
-        label: "Highest 10Y change",
+        label: "Best investment score",
         value: strongest ? strongest.name : "—",
         note:
           strongest
-            ? strongest.cityName + " · " + formatSigned(strongest.summary.growth, 4)
+            ? strongest.cityName + " · " + investmentScoreLabel(strongest)
             : "",
       },
     ]
@@ -346,6 +378,7 @@
       .map((area, index) => {
         const yearValue = getYearValue(area, state.activeYear);
         const isActive = area.name === state.selectedAreaName;
+        const metrics = area.investment?.metrics || {};
         return (
           '<button class="ranking-item' +
           (isActive ? " is-active" : "") +
@@ -360,7 +393,11 @@
           "</strong></div>" +
           renderSparkline(area) +
           "</div>" +
-          '<div class="ranking-meta"><span class="ranking-subtle">10Y change ' +
+          '<div class="ranking-meta"><span class="ranking-subtle">Score ' +
+          esc(investmentScoreLabel(area)) +
+          "</span><span class=\"ranking-subtle\">Yield " +
+          esc(formatPct(metrics.rentalYieldPct, 1)) +
+          '</span><span class="ranking-subtle">10Y change ' +
           esc(formatSigned(area.summary.growth, 4)) +
           "</span><span class=\"ranking-subtle\">Modeled " +
           esc(formatInr(area.pricePerSqft)) +
@@ -456,23 +493,64 @@
     const yearDelta = computeYearDelta(area, state.activeYear);
     const bestLift = area.summary.bestLift;
     const worstLift = area.summary.worstLift;
+    const metrics = area.investment?.metrics || {};
 
     els.selectedName.textContent = area.name;
     els.selectedRank.textContent =
-      (rank >= 0 ? "#" + String(rank + 1) + " 10Y momentum" : "Tracked") +
+      (rank >= 0 ? "#" + String(rank + 1) + " investment rank" : "Tracked") +
       " · " +
       area.cityName;
     els.selectedPrice.textContent = formatInr(area.pricePerSqft);
     els.selectedBadges.innerHTML = [
       "City <strong>" + esc(area.cityName) + "</strong>",
+      "Investment <strong>" + esc(investmentScoreLabel(area)) + "</strong>",
+      "Rental yield <strong>" + esc(formatPct(metrics.rentalYieldPct, 1)) + "</strong>",
       "10Y change <strong>" + esc(formatSigned(area.summary.growth, 4)) + "</strong>",
-      "Year " + state.activeYear + " <strong>" + esc(formatSigned(yearValue, 4)) + "</strong>",
-      "YoY move <strong>" + esc(formatSigned(yearDelta, 4)) + "</strong>",
+      "5Y rent growth <strong>" + esc(formatPct(metrics.rentGrowth5yPct, 0)) + "</strong>",
     ]
       .map((text) => '<div class="area-chip">' + text + "</div>")
       .join("");
     els.trendChart.innerHTML = chartSvg(area);
     els.selectedStats.innerHTML = [
+      {
+        label: "Investment score",
+        value: investmentScoreLabel(area),
+      },
+      {
+        label: "Rental yield",
+        value: formatPct(metrics.rentalYieldPct, 1),
+      },
+      {
+        label: "5Y rent growth",
+        value: formatPct(metrics.rentGrowth5yPct, 0),
+      },
+      {
+        label: "Demand strength",
+        value: metrics.demandStrength != null ? String(metrics.demandStrength) + " / 100" : "—",
+      },
+      {
+        label: "Employment strength",
+        value:
+          metrics.employmentStrength != null
+            ? String(metrics.employmentStrength) + " / 100"
+            : "—",
+      },
+      {
+        label: "Risk penalty",
+        value: metrics.riskPenalty != null ? String(metrics.riskPenalty) + " / 100" : "—",
+      },
+      {
+        label: "10Y change",
+        value: formatSigned(area.summary.growth, 4),
+      },
+      {
+        label: "Year " + state.activeYear,
+        value: formatSigned(yearValue, 4),
+      },
+      {
+        label: "YoY move",
+        value: formatSigned(yearDelta, 4),
+      },
       {
         label: "Best lift year",
         value: bestLift ? bestLift.year + " (" + formatSigned(bestLift.delta, 4) + ")" : "—",
@@ -482,16 +560,8 @@
         value: worstLift ? worstLift.year + " (" + formatSigned(worstLift.delta, 4) + ")" : "—",
       },
       {
-        label: "Slope / year",
-        value: formatSigned(area.summary.slope, 4),
-      },
-      {
-        label: "10Y forecast",
-        value: formatSigned(area.summary.forecast, 4),
-      },
-      {
-        label: "Anchor price",
-        value: area.model?.anchorPricePerSqft ? formatInr(area.model.anchorPricePerSqft) : "—",
+        label: "Modeled price",
+        value: formatInr(area.pricePerSqft),
       },
       {
         label: "Model uplift",
@@ -559,9 +629,9 @@
 
     els.scopeSummary.textContent =
       state.selectedCitySlugs.length === 1
-        ? "Rankings are scoped to " +
+        ? "Investment ranking is scoped to " +
           (state.cities.find((city) => city.slug === state.selectedCitySlugs[0])?.name || "the selected city")
-        : "Comparing " + state.selectedCitySlugs.length + " markets with a unified ranking table";
+        : "Comparing " + state.selectedCitySlugs.length + " markets with a unified investment ranking";
   }
 
   function updateMap() {
@@ -706,7 +776,6 @@
     const ranked = rankAreas(state.areas);
     const nextArea =
       selectedStillVisible ||
-      ranked.find((area) => area.summary.validCount >= 2) ||
       ranked[0] ||
       state.areas[0];
     selectArea(nextArea.name, { silentPopup: true });

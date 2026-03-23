@@ -4,6 +4,7 @@ const fs = require("fs");
 
 const { ingestInfrastructureNews } = require("./lib/newsIngest");
 const { loadDevelopmentSeries, rowForArea, zScoresFromMetric } = require("./lib/development");
+const { computeInvestmentScores, loadInvestmentMetrics } = require("./lib/investment");
 const { estimatePrices } = require("./lib/model");
 const { areaKey } = require("./lib/areas");
 
@@ -116,7 +117,9 @@ app.get("/api/areas", async (req, res) => {
     }
 
     const devDoc = loadDevelopmentSeries(dataDir);
+    const investmentDoc = loadInvestmentMetrics(dataDir);
     const devZ = zScoresFromMetric(selectedAreas, devDoc, "builtUpGrowth10y");
+    const investmentByKey = computeInvestmentScores(selectedAreas, devDoc, investmentDoc);
 
     const infraZ = Object.create(null);
     for (const a of selectedAreas) {
@@ -150,7 +153,11 @@ app.get("/api/areas", async (req, res) => {
                   : null,
             }
           : null;
-      return { ...a, development };
+      return {
+        ...a,
+        development,
+        investment: investmentByKey[areaKey(a)] || null,
+      };
     });
 
     res.type("json").json({
@@ -184,6 +191,8 @@ app.get("/api/areas", async (req, res) => {
         developmentForecastMetric: devDoc.forecastMetric ?? null,
         developmentGeneratedAt: devDoc.generatedAt ?? null,
         developmentHistoricWindow: devDoc.historicWindow ?? null,
+        investmentGeneratedAt: investmentDoc.generatedAt ?? null,
+        investmentWeights: investmentDoc.weights ?? null,
       },
     });
   } catch (err) {
