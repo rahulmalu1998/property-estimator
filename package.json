@@ -1,0 +1,20 @@
+{
+  "name": "property-estimator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bengaluru property heatmap with news + development-feature price model",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "ee:verify": "node earth-engine/verify-connection.js",
+    "ee:extract": "node earth-engine/extract-development.js",
+    "ee:codeeditor": "node earth-engine/extract-development.js --print-codeeditor"
+  },
+  "dependencies": {
+    "@google/earthengine": "^1.7.18",
+    "express": "^4.21.2"
+  }
+}
