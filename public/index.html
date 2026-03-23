@@ -3,7 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bengaluru property price heatmap</title>
+    <title>Bengaluru Growth Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Sora:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -13,18 +19,98 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <header class="header">
-      <div>
-        <h1>Bengaluru property prices</h1>
-        <p class="subtitle">
-          Heatmap by locality — model blends anchors, infra news signals, and
-          built-up trend features
-        </p>
-        <p class="signals-line" id="signals-line" aria-live="polite"></p>
-      </div>
-      <div class="legend" id="legend" aria-label="Price legend"></div>
-    </header>
-    <div id="map" role="application" aria-label="Map of Bengaluru"></div>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Bengaluru urban growth intelligence</p>
+          <h1>Property prices meet a 10-year development timeline.</h1>
+          <p class="subtitle">
+            Explore how each locality's built-up proxy evolved from 2015 to 2024,
+            then compare that movement against current modeled price signals.
+          </p>
+          <p class="signals-line" id="signals-line" aria-live="polite"></p>
+        </div>
+
+        <div class="hero-controls">
+          <div class="stat-strip" id="top-stats" aria-live="polite"></div>
+
+          <div class="timeline-card">
+            <div class="timeline-head">
+              <div>
+                <p class="timeline-label">Map focus year</p>
+                <div class="timeline-year-row">
+                  <strong id="year-pill">2024</strong>
+                  <span id="map-mode-summary">Latest available development signal</span>
+                </div>
+              </div>
+              <button class="play-btn" id="play-toggle" type="button">Play timeline</button>
+            </div>
+
+            <label class="year-control" for="year-slider">
+              <span class="sr-only">Select year for map playback</span>
+              <input
+                id="year-slider"
+                type="range"
+                min="2015"
+                max="2024"
+                value="2024"
+                step="1"
+              />
+            </label>
+          </div>
+
+          <div class="legend" id="legend" aria-label="Price legend"></div>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section class="map-stage">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Spatial view</p>
+              <h2>Citywide development lens</h2>
+            </div>
+            <p class="section-note">
+              Marker intensity responds to the selected year while the heat layer stays
+              anchored to modeled price.
+            </p>
+          </div>
+          <div id="map" role="application" aria-label="Map of Bengaluru"></div>
+        </section>
+
+        <aside class="inspector">
+          <section class="panel panel-selected">
+            <div class="section-head">
+              <div>
+                <p class="section-kicker">Selected locality</p>
+                <h2 id="selected-name">Loading…</h2>
+              </div>
+              <div class="area-chip" id="selected-rank">Preparing</div>
+            </div>
+
+            <div class="selected-price">
+              <span id="selected-price">-</span>
+              <small>modeled price / sqft</small>
+            </div>
+
+            <div class="selected-badges" id="selected-badges"></div>
+            <div class="trend-chart" id="trend-chart" aria-label="10 year trend chart"></div>
+            <div class="detail-grid" id="selected-stats"></div>
+          </section>
+
+          <section class="panel panel-ranking">
+            <div class="section-head">
+              <div>
+                <p class="section-kicker">Ranking</p>
+                <h2>10-year momentum table</h2>
+              </div>
+            </div>
+            <div class="ranking-list" id="ranking-list"></div>
+          </section>
+        </aside>
+      </main>
+    </div>
+
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
