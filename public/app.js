@@ -3,7 +3,10 @@
   const PLAY_INTERVAL_MS = 1200;
 
   const state = {
+    cities: [],
+    allAreas: [],
     areas: [],
+    selectedCitySlugs: [],
     activeYear: YEARS[YEARS.length - 1],
     selectedAreaName: null,
     heatLayer: null,
@@ -20,6 +23,8 @@
     yearPill: document.getElementById("year-pill"),
     mapModeSummary: document.getElementById("map-mode-summary"),
     playToggle: document.getElementById("play-toggle"),
+    cityFilters: document.getElementById("city-filters"),
+    scopeSummary: document.getElementById("scope-summary"),
     selectedName: document.getElementById("selected-name"),
     selectedRank: document.getElementById("selected-rank"),
     selectedPrice: document.getElementById("selected-price"),
@@ -42,13 +47,6 @@
       style: "currency",
       currency: "INR",
       maximumFractionDigits: 0,
-    }).format(n);
-  }
-
-  function formatCompact(n) {
-    return new Intl.NumberFormat("en-IN", {
-      notation: "compact",
-      maximumFractionDigits: 1,
     }).format(n);
   }
 
@@ -144,9 +142,10 @@
 
   function rankAreas(areas) {
     return [...areas].sort((a, b) => {
-      const ga = a.summary.growth ?? Number.NEGATIVE_INFINITY;
-      const gb = b.summary.growth ?? Number.NEGATIVE_INFINITY;
-      return gb - ga;
+      const growthA = a.summary.growth ?? Number.NEGATIVE_INFINITY;
+      const growthB = b.summary.growth ?? Number.NEGATIVE_INFINITY;
+      if (growthB !== growthA) return growthB - growthA;
+      return b.pricePerSqft - a.pricePerSqft;
     });
   }
 
@@ -245,7 +244,9 @@
     return (
       "<strong>" +
       esc(area.name) +
-      '</strong><br><span class="popup-price">' +
+      '</strong><br><span class="popup-anchor">' +
+      esc(area.cityName || "") +
+      '</span><br><span class="popup-price">' +
       esc(formatInr(area.pricePerSqft)) +
       "</span> / sqft" +
       '<div class="popup-model"><strong>Development</strong><br/>' +
@@ -268,25 +269,34 @@
   function renderTopStats(areas) {
     const ranked = rankAreas(areas);
     const meanPrice = areas.reduce((sum, area) => sum + area.pricePerSqft, 0) / areas.length;
-    const avgGrowth =
-      areas.reduce((sum, area) => sum + (area.summary.growth ?? 0), 0) / areas.length;
     const strongest = ranked[0];
+    const selectedCities = state.cities.filter((city) => state.selectedCitySlugs.includes(city.slug));
 
     els.topStats.innerHTML = [
+      {
+        label: "Markets in view",
+        value: String(selectedCities.length),
+        note:
+          selectedCities.length === 1
+            ? selectedCities[0].name
+            : selectedCities.length <= 3
+              ? selectedCities.map((city) => city.name).join(", ")
+              : selectedCities.slice(0, 3).map((city) => city.name).join(", ") +
+                " +" +
+                String(selectedCities.length - 3),
+      },
       {
         label: "Average price",
         value: formatInr(Math.round(meanPrice)),
         note: "Modeled citywide midpoint",
       },
       {
-        label: "Mean 10Y change",
-        value: formatSigned(avgGrowth, 4),
-        note: "Across all tracked localities",
-      },
-      {
-        label: "Highest momentum",
+        label: "Highest 10Y change",
         value: strongest ? strongest.name : "—",
-        note: strongest ? formatSigned(strongest.summary.growth, 4) + " over 10 years" : "",
+        note:
+          strongest
+            ? strongest.cityName + " · " + formatSigned(strongest.summary.growth, 4)
+            : "",
       },
     ]
       .map(
@@ -331,6 +341,7 @@
 
   function renderRanking(areas) {
     const ranked = rankAreas(areas);
+    const showCity = state.selectedCitySlugs.length > 1;
     els.rankingList.innerHTML = ranked
       .map((area, index) => {
         const yearValue = getYearValue(area, state.activeYear);
@@ -343,6 +354,7 @@
           '">' +
           '<div class="ranking-title"><div><small>#' +
           String(index + 1) +
+          (showCity ? " · " + esc(area.cityName) : "") +
           "</small><strong>" +
           esc(area.name) +
           "</strong></div>" +
@@ -350,7 +362,9 @@
           "</div>" +
           '<div class="ranking-meta"><span class="ranking-subtle">10Y change ' +
           esc(formatSigned(area.summary.growth, 4)) +
-          "</span><span class=\"ranking-subtle\">Year " +
+          "</span><span class=\"ranking-subtle\">Modeled " +
+          esc(formatInr(area.pricePerSqft)) +
+          " / sqft</span><span class=\"ranking-subtle\">Year " +
           state.activeYear +
           " " +
           esc(formatSigned(yearValue, 4)) +
@@ -363,7 +377,11 @@
   function chartSvg(area) {
     const valid = area.series.filter((entry) => entry.value != null);
     if (valid.length < 2) {
-      return '<div class="chart-empty">Historic yearly values are not available for this locality.</div>';
+      return (
+        '<div class="chart-empty">Historic Earth Engine values are not loaded for this locality yet. ' +
+        "Run the multi-city development extract and merge this market into " +
+        "development-series.json to unlock the 2015-2024 chart.</div>"
+      );
     }
 
     const width = 560;
@@ -440,9 +458,13 @@
     const worstLift = area.summary.worstLift;
 
     els.selectedName.textContent = area.name;
-    els.selectedRank.textContent = rank >= 0 ? "#" + String(rank + 1) + " 10Y momentum" : "Tracked";
+    els.selectedRank.textContent =
+      (rank >= 0 ? "#" + String(rank + 1) + " 10Y momentum" : "Tracked") +
+      " · " +
+      area.cityName;
     els.selectedPrice.textContent = formatInr(area.pricePerSqft);
     els.selectedBadges.innerHTML = [
+      "City <strong>" + esc(area.cityName) + "</strong>",
       "10Y change <strong>" + esc(formatSigned(area.summary.growth, 4)) + "</strong>",
       "Year " + state.activeYear + " <strong>" + esc(formatSigned(yearValue, 4)) + "</strong>",
       "YoY move <strong>" + esc(formatSigned(yearDelta, 4)) + "</strong>",
@@ -507,6 +529,39 @@
       formatSigned(norm.min, 4) +
       " to " +
       formatSigned(norm.max, 4);
+  }
+
+  function filterAreasByScope() {
+    const selected = new Set(state.selectedCitySlugs);
+    return state.allAreas.filter((area) => selected.has(area.citySlug));
+  }
+
+  function renderCityFilters() {
+    const allSelected = state.selectedCitySlugs.length === state.cities.length;
+    els.cityFilters.innerHTML =
+      '<button class="city-chip' +
+      (allSelected ? " is-active" : "") +
+      '" type="button" data-city-slug="all">All cities</button>' +
+      state.cities
+        .map((city) => {
+          const active = state.selectedCitySlugs.includes(city.slug);
+          return (
+            '<button class="city-chip' +
+            (active ? " is-active" : "") +
+            '" type="button" data-city-slug="' +
+            esc(city.slug) +
+            '">' +
+            esc(city.name) +
+            "</button>"
+          );
+        })
+        .join("");
+
+    els.scopeSummary.textContent =
+      state.selectedCitySlugs.length === 1
+        ? "Rankings are scoped to " +
+          (state.cities.find((city) => city.slug === state.selectedCitySlugs[0])?.name || "the selected city")
+        : "Comparing " + state.selectedCitySlugs.length + " markets with a unified ranking table";
   }
 
   function updateMap() {
@@ -587,6 +642,16 @@
   }
 
   function mountMap(areas) {
+    if (state.heatLayer) {
+      map.removeLayer(state.heatLayer);
+      state.heatLayer = null;
+    }
+    if (state.group) {
+      map.removeLayer(state.group);
+      state.group = null;
+    }
+    state.markersByName.clear();
+
     const prices = areas.map((area) => area.pricePerSqft);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
@@ -627,6 +692,26 @@
     updateMap();
   }
 
+  function applyCitySelection() {
+    state.areas = filterAreasByScope();
+    if (!state.areas.length) return;
+
+    renderCityFilters();
+    renderTopStats(state.areas);
+    renderRanking(state.areas);
+    mountMap(state.areas);
+    updateYearUi();
+
+    const selectedStillVisible = state.areas.find((area) => area.name === state.selectedAreaName);
+    const ranked = rankAreas(state.areas);
+    const nextArea =
+      selectedStillVisible ||
+      ranked.find((area) => area.summary.validCount >= 2) ||
+      ranked[0] ||
+      state.areas[0];
+    selectArea(nextArea.name, { silentPopup: true });
+  }
+
   function installInteractions() {
     els.yearSlider.addEventListener("input", () => {
       stopPlayback();
@@ -643,26 +728,48 @@
       if (!button) return;
       selectArea(button.getAttribute("data-area-name"));
     });
+
+    els.cityFilters.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-city-slug]");
+      if (!button) return;
+      stopPlayback();
+      const slug = button.getAttribute("data-city-slug");
+
+      if (slug === "all") {
+        state.selectedCitySlugs = state.cities.map((city) => city.slug);
+        applyCitySelection();
+        return;
+      }
+
+      if (state.selectedCitySlugs.length === state.cities.length) {
+        state.selectedCitySlugs = [slug];
+        applyCitySelection();
+        return;
+      }
+
+      const next = state.selectedCitySlugs.includes(slug)
+        ? state.selectedCitySlugs.filter((value) => value !== slug)
+        : [...state.selectedCitySlugs, slug];
+
+      state.selectedCitySlugs = next.length ? next : [slug];
+      applyCitySelection();
+    });
   }
 
-  fetch("/api/areas")
+  fetch("/api/areas?cities=all")
     .then((response) => {
       if (!response.ok) throw new Error("API error");
       return response.json();
     })
     .then((payload) => {
       setSignalsLine(payload.signals);
-      state.areas = (payload.areas || []).map(enrichArea);
-      if (!state.areas.length) return;
+      state.cities = payload.cities || [];
+      state.allAreas = (payload.areas || []).map(enrichArea);
+      if (!state.allAreas.length) return;
 
-      renderTopStats(state.areas);
-      renderRanking(state.areas);
-      mountMap(state.areas);
+      state.selectedCitySlugs = state.cities.map((city) => city.slug);
       installInteractions();
-
-      const defaultArea = rankAreas(state.areas)[0] || state.areas[0];
-      updateYearUi();
-      selectArea(defaultArea.name, { silentPopup: true });
+      applyCitySelection();
     })
     .catch(() => {
       els.legend.textContent = "Could not load property and development data.";

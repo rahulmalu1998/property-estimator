@@ -1,0 +1,139 @@
+{
+  "country": "India",
+  "currency": "INR",
+  "unit": "price_per_sqft",
+  "disclaimer": "Anchors are calibration priors sourced from public market guides and locality trend references. Rankings blend those anchors with infra news signals and historic built-up trend features where available, and should not be treated as a professional valuation.",
+  "cities": [
+    {
+      "slug": "bengaluru",
+      "name": "Bengaluru",
+      "state": "Karnataka",
+      "lat": 12.9716,
+      "lng": 77.5946,
+      "aliases": ["Bangalore", "Bengaluru", "Bengaluru Urban"],
+      "newsSearchTerms": ["Bengaluru", "Bangalore", "BMRCL"],
+      "areas": [
+        { "name": "MG Road / CBD", "lat": 12.975, "lng": 77.606, "anchorPricePerSqft": 22000 },
+        { "name": "Sadashivanagar", "lat": 13.0067, "lng": 77.5813, "anchorPricePerSqft": 18500 },
+        { "name": "Indiranagar", "lat": 12.9784, "lng": 77.6408, "anchorPricePerSqft": 16800 },
+        { "name": "Koramangala", "lat": 12.9352, "lng": 77.6245, "anchorPricePerSqft": 15200 },
+        { "name": "Ulsoor", "lat": 12.983, "lng": 77.625, "anchorPricePerSqft": 14800 },
+        { "name": "Domlur", "lat": 12.9611, "lng": 77.6386, "anchorPricePerSqft": 14200 },
+        { "name": "HSR Layout", "lat": 12.9116, "lng": 77.6471, "anchorPricePerSqft": 13800 },
+        { "name": "Bellandur", "lat": 12.9304, "lng": 77.6784, "anchorPricePerSqft": 13200 },
+        { "name": "Marathahalli", "lat": 12.9591, "lng": 77.6974, "anchorPricePerSqft": 11800 },
+        { "name": "Brookefield", "lat": 12.9669, "lng": 77.7165, "anchorPricePerSqft": 10500 },
+        { "name": "Whitefield", "lat": 12.9698, "lng": 77.75, "anchorPricePerSqft": 9800 },
+        { "name": "Kadugodi", "lat": 12.9948, "lng": 77.7619, "anchorPricePerSqft": 8200 },
+        { "name": "Hebbal", "lat": 12.9892, "lng": 77.5937, "anchorPricePerSqft": 11200 },
+        { "name": "Nagawara", "lat": 13.0451, "lng": 77.6248, "anchorPricePerSqft": 9500 },
+        { "name": "Malleshwaram", "lat": 12.9973, "lng": 77.5708, "anchorPricePerSqft": 12800 },
+        { "name": "Rajajinagar", "lat": 12.9988, "lng": 77.5496, "anchorPricePerSqft": 10200 },
+        { "name": "Jayanagar", "lat": 12.925, "lng": 77.5838, "anchorPricePerSqft": 12400 },
+        { "name": "Basavanagudi", "lat": 12.9428, "lng": 77.5732, "anchorPricePerSqft": 11500 },
+        { "name": "JP Nagar", "lat": 12.9056, "lng": 77.5858, "anchorPricePerSqft": 12000 },
+        { "name": "BTM Layout", "lat": 12.9166, "lng": 77.6101, "anchorPricePerSqft": 10800 },
+        { "name": "Bannerghatta Road", "lat": 12.8779, "lng": 77.5977, "anchorPricePerSqft": 8800 },
+        { "name": "Electronic City", "lat": 12.8456, "lng": 77.6603, "anchorPricePerSqft": 6200 },
+        { "name": "Yelahanka", "lat": 13.1007, "lng": 77.5963, "anchorPricePerSqft": 7800 },
+        { "name": "Kanakapura Road (outer)", "lat": 12.864, "lng": 77.537, "anchorPricePerSqft": 6500 }
+      ]
+    },
+    {
+      "slug": "delhi-ncr",
+      "name": "Delhi NCR",
+      "state": "Delhi / Haryana / Uttar Pradesh",
+      "lat": 28.6139,
+      "lng": 77.209,
+      "aliases": ["Delhi NCR", "Delhi", "Gurugram", "Gurgaon", "Noida"],
+      "newsSearchTerms": ["Delhi NCR", "Gurugram", "Noida", "Dwarka Expressway"],
+      "areas": [
+        { "name": "Golf Course Road", "lat": 28.4378, "lng": 77.1015, "anchorPricePerSqft": 24500 },
+        { "name": "Cyber City", "lat": 28.4949, "lng": 77.0895, "anchorPricePerSqft": 21000 },
+        { "name": "Sohna Road", "lat": 28.3974, "lng": 77.0408, "anchorPricePerSqft": 12800 },
+        { "name": "Dwarka Expressway", "lat": 28.4669, "lng": 76.9968, "anchorPricePerSqft": 14600 },
+        { "name": "New Gurgaon", "lat": 28.4036, "lng": 76.9643, "anchorPricePerSqft": 11200 },
+        { "name": "Noida Sector 150", "lat": 28.2084, "lng": 77.4625, "anchorPricePerSqft": 11000 },
+        { "name": "Greater Noida West", "lat": 28.6125, "lng": 77.4326, "anchorPricePerSqft": 7300 },
+        { "name": "Hauz Khas", "lat": 28.5494, "lng": 77.2001, "anchorPricePerSqft": 26800 },
+        { "name": "Dwarka Sector 21", "lat": 28.5515, "lng": 77.0565, "anchorPricePerSqft": 16200 }
+      ]
+    },
+    {
+      "slug": "mumbai",
+      "name": "Mumbai",
+      "state": "Maharashtra",
+      "lat": 19.076,
+      "lng": 72.8777,
+      "aliases": ["Mumbai", "Bombay", "MMR", "Navi Mumbai", "Thane"],
+      "newsSearchTerms": ["Mumbai", "MMR", "Navi Mumbai", "Coastal Road"],
+      "areas": [
+        { "name": "Bandra West", "lat": 19.0606, "lng": 72.8295, "anchorPricePerSqft": 42000 },
+        { "name": "Powai", "lat": 19.1197, "lng": 72.905, "anchorPricePerSqft": 26500 },
+        { "name": "Worli", "lat": 19.0176, "lng": 72.8174, "anchorPricePerSqft": 52000 },
+        { "name": "Lower Parel", "lat": 18.9987, "lng": 72.8286, "anchorPricePerSqft": 38500 },
+        { "name": "Andheri West", "lat": 19.1364, "lng": 72.8272, "anchorPricePerSqft": 28200 },
+        { "name": "Chembur", "lat": 19.0522, "lng": 72.9005, "anchorPricePerSqft": 23200 },
+        { "name": "Thane West", "lat": 19.2183, "lng": 72.9781, "anchorPricePerSqft": 18200 },
+        { "name": "Vashi", "lat": 19.0771, "lng": 72.9986, "anchorPricePerSqft": 19400 }
+      ]
+    },
+    {
+      "slug": "pune",
+      "name": "Pune",
+      "state": "Maharashtra",
+      "lat": 18.5204,
+      "lng": 73.8567,
+      "aliases": ["Pune", "Pimpri Chinchwad", "PCMC"],
+      "newsSearchTerms": ["Pune", "PCMC", "Pune Metro"],
+      "areas": [
+        { "name": "Koregaon Park", "lat": 18.5362, "lng": 73.8959, "anchorPricePerSqft": 18200 },
+        { "name": "Kharadi", "lat": 18.5519, "lng": 73.9477, "anchorPricePerSqft": 12600 },
+        { "name": "Hinjewadi", "lat": 18.5911, "lng": 73.7389, "anchorPricePerSqft": 9600 },
+        { "name": "Baner", "lat": 18.559, "lng": 73.7868, "anchorPricePerSqft": 12400 },
+        { "name": "Wakad", "lat": 18.5975, "lng": 73.7637, "anchorPricePerSqft": 9900 },
+        { "name": "Hadapsar", "lat": 18.4966, "lng": 73.9419, "anchorPricePerSqft": 9100 },
+        { "name": "Viman Nagar", "lat": 18.5679, "lng": 73.9143, "anchorPricePerSqft": 13600 },
+        { "name": "Shivajinagar", "lat": 18.5308, "lng": 73.8475, "anchorPricePerSqft": 14500 }
+      ]
+    },
+    {
+      "slug": "chennai",
+      "name": "Chennai",
+      "state": "Tamil Nadu",
+      "lat": 13.0827,
+      "lng": 80.2707,
+      "aliases": ["Chennai", "OMR", "Adyar", "Sholinganallur"],
+      "newsSearchTerms": ["Chennai", "OMR", "Chennai Metro", "Sholinganallur"],
+      "areas": [
+        { "name": "Anna Nagar", "lat": 13.085, "lng": 80.2101, "anchorPricePerSqft": 14600 },
+        { "name": "Adyar", "lat": 13.0067, "lng": 80.2572, "anchorPricePerSqft": 15600 },
+        { "name": "Velachery", "lat": 12.9791, "lng": 80.2209, "anchorPricePerSqft": 11100 },
+        { "name": "Sholinganallur", "lat": 12.901, "lng": 80.2279, "anchorPricePerSqft": 8600 },
+        { "name": "OMR / Perungudi", "lat": 12.9629, "lng": 80.2411, "anchorPricePerSqft": 10100 },
+        { "name": "Porur", "lat": 13.035, "lng": 80.1567, "anchorPricePerSqft": 9600 },
+        { "name": "Mylapore", "lat": 13.0335, "lng": 80.2697, "anchorPricePerSqft": 16600 },
+        { "name": "Medavakkam", "lat": 12.9172, "lng": 80.1926, "anchorPricePerSqft": 7600 }
+      ]
+    },
+    {
+      "slug": "kolkata",
+      "name": "Kolkata",
+      "state": "West Bengal",
+      "lat": 22.5726,
+      "lng": 88.3639,
+      "aliases": ["Kolkata", "Calcutta", "New Town", "Rajarhat", "Salt Lake"],
+      "newsSearchTerms": ["Kolkata", "New Town", "Rajarhat", "Salt Lake"],
+      "areas": [
+        { "name": "Salt Lake", "lat": 22.5867, "lng": 88.4171, "anchorPricePerSqft": 9600 },
+        { "name": "Rajarhat", "lat": 22.622, "lng": 88.451, "anchorPricePerSqft": 8100 },
+        { "name": "New Town", "lat": 22.575, "lng": 88.4794, "anchorPricePerSqft": 8600 },
+        { "name": "EM Bypass", "lat": 22.5157, "lng": 88.3996, "anchorPricePerSqft": 10300 },
+        { "name": "Ballygunge", "lat": 22.5222, "lng": 88.3689, "anchorPricePerSqft": 16600 },
+        { "name": "Alipore", "lat": 22.5312, "lng": 88.3334, "anchorPricePerSqft": 17600 },
+        { "name": "Tollygunge", "lat": 22.4937, "lng": 88.3459, "anchorPricePerSqft": 9100 },
+        { "name": "Garia", "lat": 22.4626, "lng": 88.3857, "anchorPricePerSqft": 6200 }
+      ]
+    }
+  ]
+}

@@ -3,14 +3,15 @@ const path = require("path");
 const fs = require("fs");
 
 const { ingestInfrastructureNews } = require("./lib/newsIngest");
-const { loadDevelopmentSeries, zScoresFromMetric } = require("./lib/development");
+const { loadDevelopmentSeries, rowForArea, zScoresFromMetric } = require("./lib/development");
 const { estimatePrices } = require("./lib/model");
+const { areaKey } = require("./lib/areas");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 const dataDir = path.join(__dirname, "data");
-const areasPath = path.join(dataDir, "bangalore-prices.json");
+const catalogPath = path.join(dataDir, "city-catalog.json");
 
 const NEWS_TTL_MS = Number(process.env.NEWS_TTL_MS || 15 * 60 * 1000);
 const MODEL_NEWS_WEIGHT = Number(process.env.MODEL_NEWS_WEIGHT || 0.11);
@@ -21,22 +22,54 @@ let newsBundle = null;
 let newsError = null;
 let newsRefreshPromise = null;
 
-function normalizeAreaRow(row) {
+function normalizeAreaRow(city, row) {
   const anchor = row.anchorPricePerSqft ?? row.pricePerSqft;
   if (typeof anchor !== "number" || !row.name) return null;
   return {
+    key: `${city.slug}::${row.name}`,
     name: row.name,
+    citySlug: city.slug,
+    cityName: city.name,
     lat: row.lat,
     lng: row.lng,
     anchorPricePerSqft: anchor,
   };
 }
 
-function loadAreas() {
-  const raw = fs.readFileSync(areasPath, "utf8");
+function loadCatalog() {
+  const raw = fs.readFileSync(catalogPath, "utf8");
   const doc = JSON.parse(raw);
-  const areas = (doc.areas || []).map(normalizeAreaRow).filter(Boolean);
-  return { meta: doc, areas };
+  const cities = (doc.cities || [])
+    .map((city) => {
+      const areas = (city.areas || []).map((row) => normalizeAreaRow(city, row)).filter(Boolean);
+      return {
+        slug: city.slug,
+        name: city.name,
+        state: city.state ?? null,
+        lat: city.lat,
+        lng: city.lng,
+        aliases: city.aliases || [],
+        newsSearchTerms: city.newsSearchTerms || [],
+        areaCount: areas.length,
+        areas,
+      };
+    })
+    .filter((city) => city.slug && city.name && city.areas.length);
+  const areas = cities.flatMap((city) => city.areas);
+  return { meta: doc, cities, areas };
+}
+
+function parseSelectedCitySlugs(rawValue, cities) {
+  const requested = String(rawValue || "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (!requested.length) return ["bengaluru"];
+  if (requested.includes("all")) return cities.map((city) => city.slug);
+  const known = new Set(cities.map((city) => city.slug));
+  const filtered = requested.filter((slug) => known.has(slug));
+  return filtered.length ? filtered : ["bengaluru"];
 }
 
 function newsStale() {
@@ -45,20 +78,20 @@ function newsStale() {
   return Number.isNaN(t) || Date.now() - t > NEWS_TTL_MS;
 }
 
-async function refreshNews(areas) {
+async function refreshNews(areas, cities) {
   newsError = null;
   try {
-    newsBundle = await ingestInfrastructureNews(areas);
+    newsBundle = await ingestInfrastructureNews(areas, cities);
   } catch (e) {
     newsError = e.message || String(e);
     console.warn("[news] refresh failed:", newsError);
   }
 }
 
-function ensureNews(areas) {
+function ensureNews(areas, cities) {
   if (!newsStale() && newsBundle) return Promise.resolve();
   if (newsRefreshPromise) return newsRefreshPromise;
-  newsRefreshPromise = refreshNews(areas).finally(() => {
+  newsRefreshPromise = refreshNews(areas, cities).finally(() => {
     newsRefreshPromise = null;
   });
   return newsRefreshPromise;
@@ -66,31 +99,38 @@ function ensureNews(areas) {
 
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/api/areas", async (_req, res) => {
+app.get("/api/areas", async (req, res) => {
   try {
-    const { meta, areas } = loadAreas();
+    const { meta, cities, areas } = loadCatalog();
     if (!areas.length) {
       return res.status(500).json({ error: "No valid areas in data file" });
     }
 
-    await ensureNews(areas);
+    await ensureNews(areas, cities);
+    const selectedCitySlugs = parseSelectedCitySlugs(req.query.cities, cities);
+    const selectedSet = new Set(selectedCitySlugs);
+    const selectedAreas = areas.filter((area) => selectedSet.has(area.citySlug));
 
-    const devDoc = loadDevelopmentSeries(dataDir);
-    const devZ = zScoresFromMetric(areas, devDoc, "builtUpGrowth10y");
-
-    const infraZ = Object.create(null);
-    for (const a of areas) {
-      infraZ[a.name] = newsBundle?.zScores?.[a.name] ?? 0;
+    if (!selectedAreas.length) {
+      return res.status(404).json({ error: "No areas found for selected cities" });
     }
 
-    const estimated = estimatePrices(areas, infraZ, devZ, {
+    const devDoc = loadDevelopmentSeries(dataDir);
+    const devZ = zScoresFromMetric(selectedAreas, devDoc, "builtUpGrowth10y");
+
+    const infraZ = Object.create(null);
+    for (const a of selectedAreas) {
+      infraZ[areaKey(a)] = newsBundle?.zScores?.[areaKey(a)] ?? 0;
+    }
+
+    const estimated = estimatePrices(selectedAreas, infraZ, devZ, {
       news: MODEL_NEWS_WEIGHT,
       dev: MODEL_DEV_WEIGHT,
       maxLogMove: MODEL_MAX_LOG_MOVE,
     });
 
     const areasOut = estimated.map((a) => {
-      const row = devDoc.areas?.[a.name];
+      const row = rowForArea(devDoc, a);
       const development =
         row && typeof row === "object"
           ? {
@@ -114,7 +154,19 @@ app.get("/api/areas", async (_req, res) => {
     });
 
     res.type("json").json({
-      city: meta.city,
+      city:
+        selectedCitySlugs.length === 1
+          ? cities.find((entry) => entry.slug === selectedCitySlugs[0])?.name || null
+          : "Multi-city",
+      selectedCitySlugs,
+      cities: cities.map((city) => ({
+        slug: city.slug,
+        name: city.name,
+        state: city.state,
+        lat: city.lat,
+        lng: city.lng,
+        areaCount: city.areaCount,
+      })),
       currency: meta.currency,
       unit: meta.unit,
       disclaimer: meta.disclaimer,
@@ -141,8 +193,8 @@ app.get("/api/areas", async (_req, res) => {
 
 app.post("/api/refresh-news", express.json(), async (_req, res) => {
   try {
-    const { areas } = loadAreas();
-    await refreshNews(areas);
+    const { areas, cities } = loadCatalog();
+    await refreshNews(areas, cities);
     res.json({
       ok: true,
       newsFetchedAt: newsBundle?.fetchedAt ?? null,
@@ -157,8 +209,8 @@ app.post("/api/refresh-news", express.json(), async (_req, res) => {
 app.listen(PORT, () => {
   console.log(`property-estimator running at http://localhost:${PORT}`);
   try {
-    const { areas } = loadAreas();
-    refreshNews(areas).catch(() => {});
+    const { areas, cities } = loadCatalog();
+    refreshNews(areas, cities).catch(() => {});
   } catch (e) {
     console.warn("[startup] could not prefetch news:", e.message);
   }

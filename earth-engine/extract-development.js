@@ -5,10 +5,14 @@
  * (OLS slope × 10 years).
  *
  * Usage:
- *   node earth-engine/extract-development.js > data/development-series.json
  *   node earth-engine/extract-development.js --write
- *   node earth-engine/extract-development.js --areas /path/to/bangalore-prices.json
+ *   node earth-engine/extract-development.js --cities bengaluru,mumbai --write
+ *   node earth-engine/extract-development.js --areas /path/to/city-catalog.json --write
  *   node earth-engine/extract-development.js --print-codeeditor  # paste into Code Editor
+ *
+ * Default behavior:
+ *   - Uses data/city-catalog.json
+ *   - Extracts all configured cities when --cities is omitted
  */
 
 'use strict';
@@ -16,6 +20,7 @@
 const fs = require('fs');
 const path = require('path');
 const { initializeEarthEngine } = require('./client');
+const { areaKey } = require('../lib/areas');
 
 const BUFFER_M = 2000;
 const START_YEAR = 2015;
@@ -27,6 +32,33 @@ function loadAreasFromPricesJson(absolutePath) {
   return (doc.areas || [])
     .filter((a) => a.name && typeof a.lat === 'number' && typeof a.lng === 'number')
     .map((a) => ({ name: a.name, lat: a.lat, lng: a.lng }));
+}
+
+function loadAreasFromCatalog(absolutePath, citySlugs) {
+  const doc = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
+  const selected = new Set((citySlugs || []).filter(Boolean));
+  const areas = [];
+
+  for (const city of doc.cities || []) {
+    if (selected.size && !selected.has(city.slug)) continue;
+    for (const area of city.areas || []) {
+      if (
+        area.name &&
+        typeof area.lat === 'number' &&
+        typeof area.lng === 'number'
+      ) {
+        areas.push({
+          name: area.name,
+          citySlug: city.slug,
+          cityName: city.name,
+          lat: area.lat,
+          lng: area.lng,
+        });
+      }
+    }
+  }
+
+  return areas;
 }
 
 function padRegionFromAreas(areas) {
@@ -80,7 +112,12 @@ function stackAnnualNdbi(ee, regionGeom, startYear, endYear) {
 
 function featureCollectionFromAreas(ee, areas) {
   const feats = areas.map((a) =>
-    ee.Feature(ee.Geometry.Point([a.lng, a.lat]).buffer(BUFFER_M), { name: a.name })
+    ee.Feature(ee.Geometry.Point([a.lng, a.lat]).buffer(BUFFER_M), {
+      name: a.name,
+      areaKey: areaKey(a),
+      citySlug: a.citySlug || null,
+      cityName: a.cityName || null,
+    })
   );
   return ee.FeatureCollection(feats);
 }
@@ -176,9 +213,14 @@ async function extractDevelopmentDoc(ee, areas) {
   }
   for (const f of info.features) {
     const props = f.properties || {};
-    const name = props.name;
-    if (!name) continue;
-    areasOut[name] = summarizeProperties(props, START_YEAR, END_YEAR);
+    const key = props.areaKey || props.name;
+    if (!key) continue;
+    areasOut[key] = {
+      name: props.name || null,
+      citySlug: props.citySlug || null,
+      cityName: props.cityName || null,
+      ...summarizeProperties(props, START_YEAR, END_YEAR),
+    };
   }
 
   return {
@@ -289,13 +331,24 @@ async function main() {
   const args = process.argv.slice(2);
   const write = args.includes('--write');
 
-  let areasPath = path.join(__dirname, '..', 'data', 'bangalore-prices.json');
+  let areasPath = path.join(__dirname, '..', 'data', 'city-catalog.json');
   const ai = args.indexOf('--areas');
   if (ai >= 0 && args[ai + 1] && !args[ai + 1].startsWith('--')) {
     areasPath = path.resolve(args[ai + 1]);
   }
 
-  const areas = loadAreasFromPricesJson(areasPath);
+  const ci = args.indexOf('--cities');
+  const citySlugs =
+    ci >= 0 && args[ci + 1] && !args[ci + 1].startsWith('--')
+      ? args[ci + 1].split(',').map((value) => value.trim()).filter(Boolean)
+      : [];
+
+  let areas = [];
+  if (path.basename(areasPath) === 'city-catalog.json') {
+    areas = loadAreasFromCatalog(areasPath, citySlugs);
+  } else {
+    areas = loadAreasFromPricesJson(areasPath);
+  }
   if (!areas.length) {
     console.error('No areas with lat/lng in', areasPath);
     process.exit(1);
@@ -332,6 +385,7 @@ module.exports = {
   START_YEAR,
   END_YEAR,
   extractDevelopmentDoc,
+  loadAreasFromCatalog,
   loadAreasFromPricesJson,
   summarizeProperties,
 };

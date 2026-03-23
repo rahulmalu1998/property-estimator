@@ -151,6 +151,8 @@ h2 {
 .area-chip,
 .play-btn,
 .ranking-item,
+.city-filter-card,
+.city-chip,
 .timeline-card,
 .legend {
   border: 1px solid var(--panel-border);
@@ -188,6 +190,45 @@ h2 {
   background:
     linear-gradient(135deg, rgba(197, 95, 53, 0.11), rgba(33, 95, 116, 0.08)),
     var(--surface-strong);
+}
+
+.city-filter-card {
+  border-radius: 22px;
+  padding: 18px;
+  background: var(--surface-strong);
+}
+
+.city-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.city-chip {
+  appearance: none;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.city-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(148, 54, 25, 0.28);
+}
+
+.city-chip.is-active {
+  background: var(--accent);
+  color: #fff8f1;
+  border-color: rgba(148, 54, 25, 0.42);
 }
 
 .timeline-head,
