@@ -11,11 +11,11 @@
     "dev": "node --watch server.js",
     "ee:verify": "node earth-engine/verify-connection.js",
     "ee:extract": "node earth-engine/extract-development.js --write",
-    "ee:merge": "node earth-engine/merge-development.js",
     "ee:codeeditor": "node earth-engine/extract-development.js --print-codeeditor"
   },
   "dependencies": {
     "@google/earthengine": "^1.7.18",
+    "better-sqlite3": "^12.8.0",
     "express": "^4.21.2"
   }
 }

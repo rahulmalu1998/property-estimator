@@ -7,6 +7,7 @@
     allAreas: [],
     areas: [],
     selectedCitySlugs: [],
+    rankingSort: "overallScore",
     activeYear: YEARS[YEARS.length - 1],
     selectedAreaName: null,
     heatLayer: null,
@@ -23,6 +24,8 @@
     yearPill: document.getElementById("year-pill"),
     mapModeSummary: document.getElementById("map-mode-summary"),
     playToggle: document.getElementById("play-toggle"),
+    basemapStreet: document.getElementById("basemap-street"),
+    basemapSatellite: document.getElementById("basemap-satellite"),
     cityFilters: document.getElementById("city-filters"),
     scopeSummary: document.getElementById("scope-summary"),
     selectedName: document.getElementById("selected-name"),
@@ -32,15 +35,39 @@
     selectedStats: document.getElementById("selected-stats"),
     trendChart: document.getElementById("trend-chart"),
     rankingList: document.getElementById("ranking-list"),
+    rankingSort: document.getElementById("ranking-sort"),
   };
 
   const map = L.map("map", { scrollWheelZoom: true }).setView([12.97, 77.59], 11);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  const streetLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 19,
   }).addTo(map);
+
+  const satelliteLayer = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+      attribution: "Tiles &copy; Esri",
+      maxZoom: 19,
+    }
+  );
+
+  function setBasemap(mode) {
+    if (mode === "satellite") {
+      if (map.hasLayer(streetLayer)) map.removeLayer(streetLayer);
+      if (!map.hasLayer(satelliteLayer)) satelliteLayer.addTo(map);
+      els.basemapStreet.classList.remove("is-active");
+      els.basemapSatellite.classList.add("is-active");
+      return;
+    }
+
+    if (map.hasLayer(satelliteLayer)) map.removeLayer(satelliteLayer);
+    if (!map.hasLayer(streetLayer)) streetLayer.addTo(map);
+    els.basemapSatellite.classList.remove("is-active");
+    els.basemapStreet.classList.add("is-active");
+  }
 
   function formatInr(n) {
     return new Intl.NumberFormat("en-IN", {
@@ -67,6 +94,39 @@
 
   function investmentScoreLabel(area) {
     return area.investment?.score != null ? area.investment.score.toFixed(1) + " / 100" : "—";
+  }
+
+  function rankingMetricValue(area, sortKey) {
+    const metrics = area.investment?.metrics || {};
+    switch (sortKey) {
+      case "employmentStrength":
+        return metrics.employmentStrength ?? Number.NEGATIVE_INFINITY;
+      case "rentalYield":
+        return metrics.rentalYieldPct ?? Number.NEGATIVE_INFINITY;
+      case "pricePerSqft":
+        return area.pricePerSqft ?? Number.NEGATIVE_INFINITY;
+      case "growth10y":
+        return area.summary.growth ?? Number.NEGATIVE_INFINITY;
+      case "overallScore":
+      default:
+        return investmentScore(area);
+    }
+  }
+
+  function rankingMetricLabel(sortKey) {
+    switch (sortKey) {
+      case "employmentStrength":
+        return "employment rank";
+      case "rentalYield":
+        return "rental yield rank";
+      case "pricePerSqft":
+        return "price rank";
+      case "growth10y":
+        return "10Y change rank";
+      case "overallScore":
+      default:
+        return "investment rank";
+    }
   }
 
   function esc(s) {
@@ -154,7 +214,11 @@
   }
 
   function rankAreas(areas) {
+    const sortKey = state.rankingSort;
     return [...areas].sort((a, b) => {
+      const primaryA = rankingMetricValue(a, sortKey);
+      const primaryB = rankingMetricValue(b, sortKey);
+      if (primaryB !== primaryA) return primaryB - primaryA;
       const scoreA = investmentScore(a);
       const scoreB = investmentScore(b);
       if (scoreB !== scoreA) return scoreB - scoreA;
@@ -310,12 +374,10 @@
         value: String(selectedCities.length),
         note:
           selectedCities.length === 1
-            ? selectedCities[0].name
-            : selectedCities.length <= 3
-              ? selectedCities.map((city) => city.name).join(", ")
-              : selectedCities.slice(0, 3).map((city) => city.name).join(", ") +
-                " +" +
-                String(selectedCities.length - 3),
+            ? selectedCities[0]?.name || "Selected city"
+            : selectedCities.length === state.cities.length
+              ? "All tracked cities"
+              : selectedCities.map((city) => city.name).join(", "),
       },
       {
         label: "Average rental yield",
@@ -327,7 +389,7 @@
         value: strongest ? strongest.name : "—",
         note:
           strongest
-            ? strongest.cityName + " · " + investmentScoreLabel(strongest)
+            ? [strongest.cityName, investmentScoreLabel(strongest)].filter(Boolean).join(" · ")
             : "",
       },
     ]
@@ -374,6 +436,7 @@
   function renderRanking(areas) {
     const ranked = rankAreas(areas);
     const showCity = state.selectedCitySlugs.length > 1;
+    const sortKey = state.rankingSort;
     els.rankingList.innerHTML = ranked
       .map((area, index) => {
         const yearValue = getYearValue(area, state.activeYear);
@@ -387,14 +450,24 @@
           '">' +
           '<div class="ranking-title"><div><small>#' +
           String(index + 1) +
-          (showCity ? " · " + esc(area.cityName) : "") +
+          (showCity ? " · " + esc(area.cityName || "") : "") +
           "</small><strong>" +
           esc(area.name) +
           "</strong></div>" +
           renderSparkline(area) +
           "</div>" +
-          '<div class="ranking-meta"><span class="ranking-subtle">Score ' +
-          esc(investmentScoreLabel(area)) +
+          '<div class="ranking-meta"><span class="ranking-subtle">' +
+          esc(
+            sortKey === "employmentStrength"
+              ? "Employment " + String(metrics.employmentStrength ?? "—") + " / 100"
+              : sortKey === "rentalYield"
+                ? "Yield " + formatPct(metrics.rentalYieldPct, 1)
+                : sortKey === "pricePerSqft"
+                  ? "Price " + formatInr(area.pricePerSqft)
+                  : sortKey === "growth10y"
+                    ? "10Y change " + formatSigned(area.summary.growth, 4)
+                    : "Score " + investmentScoreLabel(area)
+          ) +
           "</span><span class=\"ranking-subtle\">Yield " +
           esc(formatPct(metrics.rentalYieldPct, 1)) +
           '</span><span class="ranking-subtle">10Y change ' +
@@ -416,8 +489,8 @@
     if (valid.length < 2) {
       return (
         '<div class="chart-empty">Historic Earth Engine values are not loaded for this locality yet. ' +
-        "Run the multi-city development extract and merge this market into " +
-        "development-series.json to unlock the 2015-2024 chart.</div>"
+        "Run the multi-city development extract to populate the development database " +
+        "and unlock the 2015-2024 chart.</div>"
       );
     }
 
@@ -497,9 +570,9 @@
 
     els.selectedName.textContent = area.name;
     els.selectedRank.textContent =
-      (rank >= 0 ? "#" + String(rank + 1) + " investment rank" : "Tracked") +
+      (rank >= 0 ? "#" + String(rank + 1) + " " + rankingMetricLabel(state.rankingSort) : "Tracked") +
       " · " +
-      area.cityName;
+      (area.cityName || "");
     els.selectedPrice.textContent = formatInr(area.pricePerSqft);
     els.selectedBadges.innerHTML = [
       "City <strong>" + esc(area.cityName) + "</strong>",
@@ -613,25 +686,51 @@
       (allSelected ? " is-active" : "") +
       '" type="button" data-city-slug="all">All cities</button>' +
       state.cities
-        .map((city) => {
-          const active = state.selectedCitySlugs.includes(city.slug);
-          return (
+        .map(
+          (city) =>
             '<button class="city-chip' +
-            (active ? " is-active" : "") +
+            (state.selectedCitySlugs.includes(city.slug) ? " is-active" : "") +
             '" type="button" data-city-slug="' +
             esc(city.slug) +
             '">' +
             esc(city.name) +
             "</button>"
-          );
-        })
+        )
         .join("");
 
     els.scopeSummary.textContent =
       state.selectedCitySlugs.length === 1
         ? "Investment ranking is scoped to " +
           (state.cities.find((city) => city.slug === state.selectedCitySlugs[0])?.name || "the selected city")
-        : "Comparing " + state.selectedCitySlugs.length + " markets with a unified investment ranking";
+        : "Comparing all tracked cities with a unified investment ranking";
+  }
+
+  function cityBounds(citySlug) {
+    const cityAreas = state.areas.filter((area) => area.citySlug === citySlug);
+    if (!cityAreas.length) return null;
+    return L.latLngBounds(cityAreas.map((area) => [area.lat, area.lng]));
+  }
+
+  function focusArea(area) {
+    const marker = state.markersByName.get(area.name);
+    if (!marker) return;
+
+    const hasMultipleCitiesSelected = state.selectedCitySlugs.length > 1;
+    const bounds = cityBounds(area.citySlug);
+
+    if (hasMultipleCitiesSelected && bounds && bounds.isValid()) {
+      map.flyToBounds(bounds.pad(0.24), {
+        padding: [32, 32],
+        duration: 0.85,
+        maxZoom: 12,
+      });
+      return;
+    }
+
+    map.flyTo(marker.getLatLng(), 12, {
+      animate: true,
+      duration: 0.8,
+    });
   }
 
   function updateMap() {
@@ -676,8 +775,12 @@
     renderSelectedArea(area);
     updateMap();
 
+    const marker = state.markersByName.get(area.name);
+    if (marker && (!opts || opts.pan !== false)) {
+      focusArea(area);
+    }
+
     if (!opts || !opts.silentPopup) {
-      const marker = state.markersByName.get(area.name);
       if (marker) marker.openPopup();
     }
   }
@@ -778,7 +881,7 @@
       selectedStillVisible ||
       ranked[0] ||
       state.areas[0];
-    selectArea(nextArea.name, { silentPopup: true });
+    selectArea(nextArea.name, { silentPopup: true, pan: false });
   }
 
   function installInteractions() {
@@ -792,6 +895,14 @@
       else startPlayback();
     });
 
+    els.basemapStreet.addEventListener("click", () => {
+      setBasemap("street");
+    });
+
+    els.basemapSatellite.addEventListener("click", () => {
+      setBasemap("satellite");
+    });
+
     els.rankingList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-area-name]");
       if (!button) return;
@@ -803,7 +914,6 @@
       if (!button) return;
       stopPlayback();
       const slug = button.getAttribute("data-city-slug");
-
       if (slug === "all") {
         state.selectedCitySlugs = state.cities.map((city) => city.slug);
         applyCitySelection();
@@ -823,6 +933,13 @@
       state.selectedCitySlugs = next.length ? next : [slug];
       applyCitySelection();
     });
+
+    els.rankingSort.addEventListener("change", () => {
+      state.rankingSort = els.rankingSort.value || "overallScore";
+      renderRanking(state.areas);
+      const area = state.areas.find((entry) => entry.name === state.selectedAreaName);
+      if (area) renderSelectedArea(area);
+    });
   }
 
   fetch("/api/areas?cities=all")
@@ -836,6 +953,7 @@
       state.allAreas = (payload.areas || []).map(enrichArea);
       if (!state.allAreas.length) return;
 
+      els.rankingSort.value = state.rankingSort;
       state.selectedCitySlugs = state.cities.map((city) => city.slug);
       installInteractions();
       applyCitySelection();

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bengaluru Growth Atlas</title>
+    <title>India Growth Atlas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -36,7 +36,7 @@
             <div class="section-head">
               <div>
                 <p class="section-kicker">City scope</p>
-                <h2>Choose markets to compare</h2>
+                <h2>Choose a city to compare</h2>
               </div>
               <p class="section-note" id="scope-summary">
                 Loading available city coverage
@@ -77,50 +77,72 @@
       </header>
 
       <main class="dashboard">
-        <section class="map-stage">
+        <div class="dashboard-top">
+          <section class="map-stage">
+            <div class="section-head section-head-map">
+              <div>
+                <p class="section-kicker">Spatial view</p>
+                <h2>Development lens</h2>
+              </div>
+              <div class="map-head-actions">
+                <p class="section-note">
+                  Ranking is investment-led, while the map still lets you inspect the
+                  yearly development signal behind each locality.
+                </p>
+                <div class="map-mode-switch" aria-label="Map style switch">
+                  <button class="map-mode-btn is-active" id="basemap-street" type="button">
+                    Street
+                  </button>
+                  <button class="map-mode-btn" id="basemap-satellite" type="button">
+                    Satellite
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div id="map" role="application" aria-label="Map of Indian property markets"></div>
+          </section>
+
+          <aside class="inspector">
+            <section class="panel panel-selected">
+              <div class="section-head">
+                <div>
+                  <p class="section-kicker">Selected locality</p>
+                  <h2 id="selected-name">Loading…</h2>
+                </div>
+                <div class="area-chip" id="selected-rank">Preparing</div>
+              </div>
+
+              <div class="selected-price">
+                <span id="selected-price">-</span>
+                <small>modeled price / sqft</small>
+              </div>
+
+              <div class="selected-badges" id="selected-badges"></div>
+              <div class="trend-chart" id="trend-chart" aria-label="10 year trend chart"></div>
+              <div class="detail-grid" id="selected-stats"></div>
+            </section>
+          </aside>
+        </div>
+
+        <section class="panel panel-ranking panel-ranking-wide">
           <div class="section-head">
             <div>
-              <p class="section-kicker">Spatial view</p>
-              <h2>Citywide development lens</h2>
+              <p class="section-kicker">Ranking</p>
+              <h2>Cross-city investment ranking</h2>
             </div>
-            <p class="section-note">
-              Ranking is investment-led, while the map still lets you inspect the
-              yearly development signal behind each locality.
-            </p>
+            <label class="sort-select-wrap" for="ranking-sort">
+              <span class="sr-only">Sort ranking by</span>
+              <select id="ranking-sort" aria-label="Sort ranking by">
+                <option value="overallScore">Overall score</option>
+                <option value="employmentStrength">Employment strength</option>
+                <option value="rentalYield">Rental yield</option>
+                <option value="pricePerSqft">Property price</option>
+                <option value="growth10y">10Y change</option>
+              </select>
+            </label>
           </div>
-          <div id="map" role="application" aria-label="Map of Bengaluru"></div>
+          <div class="ranking-list" id="ranking-list"></div>
         </section>
-
-        <aside class="inspector">
-          <section class="panel panel-selected">
-            <div class="section-head">
-              <div>
-                <p class="section-kicker">Selected locality</p>
-                <h2 id="selected-name">Loading…</h2>
-              </div>
-              <div class="area-chip" id="selected-rank">Preparing</div>
-            </div>
-
-            <div class="selected-price">
-              <span id="selected-price">-</span>
-              <small>modeled price / sqft</small>
-            </div>
-
-            <div class="selected-badges" id="selected-badges"></div>
-            <div class="trend-chart" id="trend-chart" aria-label="10 year trend chart"></div>
-            <div class="detail-grid" id="selected-stats"></div>
-          </section>
-
-          <section class="panel panel-ranking">
-            <div class="section-head">
-              <div>
-                <p class="section-kicker">Ranking</p>
-                <h2>Cross-city investment ranking</h2>
-              </div>
-            </div>
-            <div class="ranking-list" id="ranking-list"></div>
-          </section>
-        </aside>
       </main>
     </div>
 

@@ -21,6 +21,11 @@ const fs = require('fs');
 const path = require('path');
 const { initializeEarthEngine } = require('./client');
 const { areaKey } = require('../lib/areas');
+const {
+  loadDevelopmentSeries,
+  mergeDevelopmentSeries,
+  writeDevelopmentSeries,
+} = require('../lib/development');
 
 const BUFFER_M = 2000;
 const START_YEAR = 2015;
@@ -367,8 +372,12 @@ async function main() {
   const json = JSON.stringify(doc, null, 2);
 
   if (write) {
-    const outPath = path.join(__dirname, '..', 'data', 'development-series.json');
-    fs.writeFileSync(outPath, json, 'utf8');
+    const dataDir = path.join(__dirname, '..', 'data');
+    const existingDoc = loadDevelopmentSeries(dataDir);
+    const outPath = writeDevelopmentSeries(
+      dataDir,
+      mergeDevelopmentSeries(existingDoc, doc)
+    );
     console.error('[ee:extract] wrote', outPath);
   } else {
     console.log(json);

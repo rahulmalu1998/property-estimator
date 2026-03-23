@@ -23,6 +23,14 @@ let newsBundle = null;
 let newsError = null;
 let newsRefreshPromise = null;
 
+function slugifyLabel(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function normalizeAreaRow(city, row) {
   const anchor = row.anchorPricePerSqft ?? row.pricePerSqft;
   if (typeof anchor !== "number" || !row.name) return null;
@@ -31,6 +39,8 @@ function normalizeAreaRow(city, row) {
     name: row.name,
     citySlug: city.slug,
     cityName: city.name,
+    state: city.state ?? null,
+    stateSlug: slugifyLabel(city.state),
     lat: row.lat,
     lng: row.lng,
     anchorPricePerSqft: anchor,
@@ -47,6 +57,7 @@ function loadCatalog() {
         slug: city.slug,
         name: city.name,
         state: city.state ?? null,
+        stateSlug: slugifyLabel(city.state),
         lat: city.lat,
         lng: city.lng,
         aliases: city.aliases || [],
@@ -57,7 +68,29 @@ function loadCatalog() {
     })
     .filter((city) => city.slug && city.name && city.areas.length);
   const areas = cities.flatMap((city) => city.areas);
-  return { meta: doc, cities, areas };
+  const states = Object.values(
+    cities.reduce((acc, city) => {
+      const key = city.stateSlug || "unknown";
+      if (!acc[key]) {
+        acc[key] = {
+          slug: key,
+          name: city.state || "Unknown",
+          cityCount: 0,
+          areaCount: 0,
+          cities: [],
+        };
+      }
+      acc[key].cityCount += 1;
+      acc[key].areaCount += city.areaCount;
+      acc[key].cities.push({
+        slug: city.slug,
+        name: city.name,
+        areaCount: city.areaCount,
+      });
+      return acc;
+    }, {})
+  ).sort((a, b) => a.name.localeCompare(b.name));
+  return { meta: doc, cities, states, areas };
 }
 
 function parseSelectedCitySlugs(rawValue, cities) {
@@ -102,7 +135,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/api/areas", async (req, res) => {
   try {
-    const { meta, cities, areas } = loadCatalog();
+    const { meta, cities, states, areas } = loadCatalog();
     if (!areas.length) {
       return res.status(500).json({ error: "No valid areas in data file" });
     }
@@ -166,10 +199,12 @@ app.get("/api/areas", async (req, res) => {
           ? cities.find((entry) => entry.slug === selectedCitySlugs[0])?.name || null
           : "Multi-city",
       selectedCitySlugs,
+      states,
       cities: cities.map((city) => ({
         slug: city.slug,
         name: city.name,
         state: city.state,
+        stateSlug: city.stateSlug,
         lat: city.lat,
         lng: city.lng,
         areaCount: city.areaCount,

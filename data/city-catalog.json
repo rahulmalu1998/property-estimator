@@ -5,6 +5,234 @@
   "disclaimer": "Anchors are calibration priors sourced from public market guides and locality trend references. Rankings blend those anchors with infra news signals and historic built-up trend features where available, and should not be treated as a professional valuation.",
   "cities": [
     {
+      "slug": "chandigarh-tricity",
+      "name": "Chandigarh Tricity",
+      "state": "Chandigarh / Punjab / Haryana",
+      "lat": 30.7333,
+      "lng": 76.7794,
+      "aliases": ["Chandigarh", "Mohali", "Panchkula", "Zirakpur", "Tricity"],
+      "newsSearchTerms": ["Chandigarh", "Mohali", "Panchkula", "Zirakpur"],
+      "areas": [
+        { "name": "Sector 8 Chandigarh", "lat": 30.7412, "lng": 76.7842, "anchorPricePerSqft": 13800 },
+        { "name": "Sector 17 Chandigarh", "lat": 30.7402, "lng": 76.7734, "anchorPricePerSqft": 12800 },
+        { "name": "IT Park Chandigarh", "lat": 30.7284, "lng": 76.8428, "anchorPricePerSqft": 9800 },
+        { "name": "Aerocity Mohali", "lat": 30.6734, "lng": 76.7333, "anchorPricePerSqft": 9400 },
+        { "name": "Airport Road Mohali", "lat": 30.6917, "lng": 76.7361, "anchorPricePerSqft": 8800 },
+        { "name": "Zirakpur", "lat": 30.6425, "lng": 76.8173, "anchorPricePerSqft": 7100 },
+        { "name": "New Chandigarh", "lat": 30.7775, "lng": 76.7241, "anchorPricePerSqft": 7600 },
+        { "name": "Panchkula Sector 20", "lat": 30.6942, "lng": 76.8606, "anchorPricePerSqft": 8600 }
+      ]
+    },
+    {
+      "slug": "hyderabad",
+      "name": "Hyderabad",
+      "state": "Telangana",
+      "lat": 17.385,
+      "lng": 78.4867,
+      "aliases": ["Hyderabad", "HITEC City", "Gachibowli", "Kokapet"],
+      "newsSearchTerms": ["Hyderabad", "HITEC City", "Gachibowli", "Kokapet"],
+      "areas": [
+        { "name": "Banjara Hills", "lat": 17.4126, "lng": 78.4482, "anchorPricePerSqft": 18200 },
+        { "name": "Jubilee Hills", "lat": 17.4316, "lng": 78.4071, "anchorPricePerSqft": 24200 },
+        { "name": "Gachibowli", "lat": 17.4401, "lng": 78.3489, "anchorPricePerSqft": 11800 },
+        { "name": "Financial District", "lat": 17.4189, "lng": 78.3428, "anchorPricePerSqft": 12100 },
+        { "name": "HITEC City", "lat": 17.4504, "lng": 78.3803, "anchorPricePerSqft": 13600 },
+        { "name": "Kondapur", "lat": 17.4615, "lng": 78.367, "anchorPricePerSqft": 9800 },
+        { "name": "Kokapet", "lat": 17.3901, "lng": 78.3404, "anchorPricePerSqft": 11400 },
+        { "name": "Miyapur", "lat": 17.4967, "lng": 78.3562, "anchorPricePerSqft": 7600 }
+      ]
+    },
+    {
+      "slug": "jaipur",
+      "name": "Jaipur",
+      "state": "Rajasthan",
+      "lat": 26.9124,
+      "lng": 75.7873,
+      "aliases": ["Jaipur", "C-Scheme", "Vaishali Nagar", "Jagatpura"],
+      "newsSearchTerms": ["Jaipur", "Jagatpura", "Vaishali Nagar", "Ajmer Road"],
+      "areas": [
+        { "name": "C-Scheme", "lat": 26.9155, "lng": 75.8058, "anchorPricePerSqft": 10200 },
+        { "name": "Malviya Nagar", "lat": 26.8526, "lng": 75.8106, "anchorPricePerSqft": 7600 },
+        { "name": "Vaishali Nagar", "lat": 26.9117, "lng": 75.7426, "anchorPricePerSqft": 7200 },
+        { "name": "Jagatpura", "lat": 26.8248, "lng": 75.8422, "anchorPricePerSqft": 5600 },
+        { "name": "Mansarovar", "lat": 26.8556, "lng": 75.7649, "anchorPricePerSqft": 6200 },
+        { "name": "Ajmer Road", "lat": 26.8971, "lng": 75.7059, "anchorPricePerSqft": 5900 },
+        { "name": "Tonk Road", "lat": 26.8467, "lng": 75.7984, "anchorPricePerSqft": 6400 },
+        { "name": "Sirsi Road", "lat": 26.9442, "lng": 75.7067, "anchorPricePerSqft": 5400 }
+      ]
+    },
+    {
+      "slug": "lucknow",
+      "name": "Lucknow",
+      "state": "Uttar Pradesh",
+      "lat": 26.8467,
+      "lng": 80.9462,
+      "aliases": ["Lucknow", "Gomti Nagar", "Hazratganj", "Shaheed Path"],
+      "newsSearchTerms": ["Lucknow", "Gomti Nagar", "Shaheed Path", "Sushant Golf City"],
+      "areas": [
+        { "name": "Gomti Nagar", "lat": 26.8645, "lng": 81.002, "anchorPricePerSqft": 7200 },
+        { "name": "Gomti Nagar Extension", "lat": 26.8873, "lng": 81.0358, "anchorPricePerSqft": 6500 },
+        { "name": "Shaheed Path", "lat": 26.8127, "lng": 81.0235, "anchorPricePerSqft": 6800 },
+        { "name": "Sushant Golf City", "lat": 26.7612, "lng": 80.9765, "anchorPricePerSqft": 6400 },
+        { "name": "Hazratganj", "lat": 26.8497, "lng": 80.9462, "anchorPricePerSqft": 9800 },
+        { "name": "Aliganj", "lat": 26.8955, "lng": 80.9468, "anchorPricePerSqft": 7000 },
+        { "name": "Indira Nagar Lucknow", "lat": 26.8813, "lng": 81.0148, "anchorPricePerSqft": 5800 },
+        { "name": "Jankipuram", "lat": 26.9408, "lng": 80.9215, "anchorPricePerSqft": 5200 }
+      ]
+    },
+    {
+      "slug": "bhubaneswar",
+      "name": "Bhubaneswar",
+      "state": "Odisha",
+      "lat": 20.2961,
+      "lng": 85.8245,
+      "aliases": ["Bhubaneswar", "Patia", "Chandrasekharpur", "Khandagiri"],
+      "newsSearchTerms": ["Bhubaneswar", "Patia", "Chandrasekharpur", "Jaydev Vihar"],
+      "areas": [
+        { "name": "Patia", "lat": 20.3553, "lng": 85.8195, "anchorPricePerSqft": 6900 },
+        { "name": "Chandrasekharpur", "lat": 20.335, "lng": 85.8244, "anchorPricePerSqft": 7200 },
+        { "name": "Khandagiri", "lat": 20.2565, "lng": 85.7804, "anchorPricePerSqft": 6100 },
+        { "name": "Rasulgarh", "lat": 20.2961, "lng": 85.8772, "anchorPricePerSqft": 5600 },
+        { "name": "Pahala", "lat": 20.3001, "lng": 85.9085, "anchorPricePerSqft": 5000 },
+        { "name": "Old Town Bhubaneswar", "lat": 20.2378, "lng": 85.8339, "anchorPricePerSqft": 6200 },
+        { "name": "Jaydev Vihar", "lat": 20.3019, "lng": 85.8207, "anchorPricePerSqft": 7600 },
+        { "name": "Tamando", "lat": 20.2206, "lng": 85.7558, "anchorPricePerSqft": 4700 }
+      ]
+    },
+    {
+      "slug": "bhopal",
+      "name": "Bhopal",
+      "state": "Madhya Pradesh",
+      "lat": 23.2599,
+      "lng": 77.4126,
+      "aliases": ["Bhopal", "Arera Colony", "MP Nagar", "Kolar Road"],
+      "newsSearchTerms": ["Bhopal", "Arera Colony", "MP Nagar", "Hoshangabad Road"],
+      "areas": [
+        { "name": "Arera Colony", "lat": 23.2272, "lng": 77.4311, "anchorPricePerSqft": 6200 },
+        { "name": "MP Nagar", "lat": 23.2339, "lng": 77.434, "anchorPricePerSqft": 6700 },
+        { "name": "Kolar Road", "lat": 23.166, "lng": 77.4432, "anchorPricePerSqft": 4200 },
+        { "name": "Hoshangabad Road", "lat": 23.1668, "lng": 77.4546, "anchorPricePerSqft": 5600 },
+        { "name": "Bawadia Kalan", "lat": 23.1775, "lng": 77.4388, "anchorPricePerSqft": 5000 },
+        { "name": "Ayodhya Bypass", "lat": 23.2891, "lng": 77.4626, "anchorPricePerSqft": 4300 },
+        { "name": "BHEL", "lat": 23.2765, "lng": 77.4639, "anchorPricePerSqft": 3900 },
+        { "name": "Katara Hills", "lat": 23.1383, "lng": 77.4094, "anchorPricePerSqft": 4100 }
+      ]
+    },
+    {
+      "slug": "ahmedabad",
+      "name": "Ahmedabad",
+      "state": "Gujarat",
+      "lat": 23.0225,
+      "lng": 72.5714,
+      "aliases": ["Ahmedabad", "Amdavad", "SG Highway", "Prahlad Nagar", "Bopal"],
+      "newsSearchTerms": ["Ahmedabad", "SG Highway", "GIFT City", "Prahlad Nagar"],
+      "areas": [
+        { "name": "SG Highway", "lat": 23.0705, "lng": 72.5176, "anchorPricePerSqft": 9200 },
+        { "name": "Prahlad Nagar", "lat": 23.0118, "lng": 72.5102, "anchorPricePerSqft": 9800 },
+        { "name": "Bodakdev", "lat": 23.0368, "lng": 72.5115, "anchorPricePerSqft": 11800 },
+        { "name": "Satellite", "lat": 23.0146, "lng": 72.5304, "anchorPricePerSqft": 10800 },
+        { "name": "Thaltej", "lat": 23.0497, "lng": 72.4952, "anchorPricePerSqft": 8900 },
+        { "name": "Science City", "lat": 23.0714, "lng": 72.4936, "anchorPricePerSqft": 8200 },
+        { "name": "South Bopal", "lat": 23.0006, "lng": 72.4635, "anchorPricePerSqft": 6900 },
+        { "name": "Gota", "lat": 23.1074, "lng": 72.5411, "anchorPricePerSqft": 6100 }
+      ]
+    },
+    {
+      "slug": "surat",
+      "name": "Surat",
+      "state": "Gujarat",
+      "lat": 21.1702,
+      "lng": 72.8311,
+      "aliases": ["Surat", "Vesu", "Adajan", "Piplod"],
+      "newsSearchTerms": ["Surat", "Vesu", "Dumas Road", "Diamond Bourse"],
+      "areas": [
+        { "name": "Vesu", "lat": 21.1498, "lng": 72.7709, "anchorPricePerSqft": 8400 },
+        { "name": "Piplod", "lat": 21.1541, "lng": 72.7719, "anchorPricePerSqft": 8100 },
+        { "name": "Adajan", "lat": 21.1984, "lng": 72.7944, "anchorPricePerSqft": 6900 },
+        { "name": "Pal", "lat": 21.1864, "lng": 72.7596, "anchorPricePerSqft": 6500 },
+        { "name": "Althan", "lat": 21.1476, "lng": 72.7977, "anchorPricePerSqft": 6200 },
+        { "name": "City Light", "lat": 21.1719, "lng": 72.7937, "anchorPricePerSqft": 7800 },
+        { "name": "Dumas Road", "lat": 21.1321, "lng": 72.7518, "anchorPricePerSqft": 7600 },
+        { "name": "Jahangirpura", "lat": 21.2274, "lng": 72.7875, "anchorPricePerSqft": 5600 }
+      ]
+    },
+    {
+      "slug": "nagpur",
+      "name": "Nagpur",
+      "state": "Maharashtra",
+      "lat": 21.1458,
+      "lng": 79.0882,
+      "aliases": ["Nagpur", "MIHAN", "Wardha Road", "Civil Lines"],
+      "newsSearchTerms": ["Nagpur", "MIHAN", "Wardha Road", "Nagpur Metro"],
+      "areas": [
+        { "name": "Civil Lines Nagpur", "lat": 21.1518, "lng": 79.0747, "anchorPricePerSqft": 7800 },
+        { "name": "Dharampeth", "lat": 21.1368, "lng": 79.0587, "anchorPricePerSqft": 7400 },
+        { "name": "Wardha Road", "lat": 21.0914, "lng": 79.0472, "anchorPricePerSqft": 6900 },
+        { "name": "MIHAN", "lat": 21.0207, "lng": 79.0055, "anchorPricePerSqft": 6200 },
+        { "name": "Manish Nagar", "lat": 21.0934, "lng": 79.0528, "anchorPricePerSqft": 5800 },
+        { "name": "Besa", "lat": 21.0892, "lng": 79.0951, "anchorPricePerSqft": 5200 },
+        { "name": "Narendra Nagar", "lat": 21.1131, "lng": 79.0896, "anchorPricePerSqft": 6100 },
+        { "name": "Hingna Road", "lat": 21.1246, "lng": 79.0038, "anchorPricePerSqft": 4900 }
+      ]
+    },
+    {
+      "slug": "srinagar",
+      "name": "Srinagar",
+      "state": "Jammu & Kashmir",
+      "lat": 34.0837,
+      "lng": 74.7973,
+      "aliases": ["Srinagar", "Rajbagh", "Hyderpora", "Bemina"],
+      "newsSearchTerms": ["Srinagar", "Rajbagh", "Hyderpora", "Srinagar Smart City"],
+      "areas": [
+        { "name": "Rajbagh", "lat": 34.0686, "lng": 74.8324, "anchorPricePerSqft": 7800 },
+        { "name": "Jawahar Nagar Srinagar", "lat": 34.0609, "lng": 74.8484, "anchorPricePerSqft": 7200 },
+        { "name": "Hyderpora", "lat": 34.0605, "lng": 74.7801, "anchorPricePerSqft": 6600 },
+        { "name": "Bemina", "lat": 34.0862, "lng": 74.7736, "anchorPricePerSqft": 5900 },
+        { "name": "Lal Bazar", "lat": 34.1208, "lng": 74.8221, "anchorPricePerSqft": 5600 },
+        { "name": "Chanapora", "lat": 34.0523, "lng": 74.8028, "anchorPricePerSqft": 6100 },
+        { "name": "Sanat Nagar Srinagar", "lat": 34.0537, "lng": 74.7918, "anchorPricePerSqft": 6400 },
+        { "name": "Humhama", "lat": 33.9995, "lng": 74.7612, "anchorPricePerSqft": 5500 }
+      ]
+    },
+    {
+      "slug": "amritsar",
+      "name": "Amritsar",
+      "state": "Punjab",
+      "lat": 31.634,
+      "lng": 74.8723,
+      "aliases": ["Amritsar", "Ranjit Avenue", "GT Road", "New Amritsar"],
+      "newsSearchTerms": ["Amritsar", "Ranjit Avenue", "Airport Road Amritsar", "GT Road"],
+      "areas": [
+        { "name": "Ranjit Avenue", "lat": 31.6412, "lng": 74.8595, "anchorPricePerSqft": 7600 },
+        { "name": "Airport Road Amritsar", "lat": 31.6751, "lng": 74.8014, "anchorPricePerSqft": 6200 },
+        { "name": "GT Road Amritsar", "lat": 31.6624, "lng": 74.9025, "anchorPricePerSqft": 6900 },
+        { "name": "Medical Enclave", "lat": 31.6518, "lng": 74.8481, "anchorPricePerSqft": 6400 },
+        { "name": "White Avenue", "lat": 31.6495, "lng": 74.8763, "anchorPricePerSqft": 7100 },
+        { "name": "New Amritsar", "lat": 31.6803, "lng": 74.8217, "anchorPricePerSqft": 5800 },
+        { "name": "Majitha Road", "lat": 31.6605, "lng": 74.8619, "anchorPricePerSqft": 6000 },
+        { "name": "Lawrence Road", "lat": 31.6324, "lng": 74.8741, "anchorPricePerSqft": 7300 }
+      ]
+    },
+    {
+      "slug": "ludhiana",
+      "name": "Ludhiana",
+      "state": "Punjab",
+      "lat": 30.901,
+      "lng": 75.8573,
+      "aliases": ["Ludhiana", "Pakhowal Road", "Sarabha Nagar", "South City"],
+      "newsSearchTerms": ["Ludhiana", "Pakhowal Road", "Ferozepur Road", "Ludhiana smart city"],
+      "areas": [
+        { "name": "Sarabha Nagar", "lat": 30.8888, "lng": 75.8387, "anchorPricePerSqft": 8200 },
+        { "name": "Pakhowal Road", "lat": 30.8657, "lng": 75.8175, "anchorPricePerSqft": 6900 },
+        { "name": "Ferozepur Road Ludhiana", "lat": 30.8706, "lng": 75.8333, "anchorPricePerSqft": 7100 },
+        { "name": "South City Ludhiana", "lat": 30.8515, "lng": 75.8093, "anchorPricePerSqft": 6300 },
+        { "name": "Chandigarh Road Ludhiana", "lat": 30.9142, "lng": 75.9174, "anchorPricePerSqft": 5600 },
+        { "name": "Dugri", "lat": 30.8663, "lng": 75.8505, "anchorPricePerSqft": 5900 },
+        { "name": "Sidhwan Canal", "lat": 30.9008, "lng": 75.8081, "anchorPricePerSqft": 6500 },
+        { "name": "Gill Road", "lat": 30.8798, "lng": 75.8704, "anchorPricePerSqft": 5200 }
+      ]
+    },
+    {
       "slug": "bengaluru",
       "name": "Bengaluru",
       "state": "Karnataka",
@@ -49,14 +277,26 @@
       "newsSearchTerms": ["Delhi NCR", "Gurugram", "Noida", "Dwarka Expressway"],
       "areas": [
         { "name": "Golf Course Road", "lat": 28.4378, "lng": 77.1015, "anchorPricePerSqft": 24500 },
+        { "name": "Golf Course Extension Road", "lat": 28.4228, "lng": 77.0838, "anchorPricePerSqft": 18500 },
         { "name": "Cyber City", "lat": 28.4949, "lng": 77.0895, "anchorPricePerSqft": 21000 },
+        { "name": "MG Road Gurgaon", "lat": 28.4792, "lng": 77.0806, "anchorPricePerSqft": 17800 },
         { "name": "Sohna Road", "lat": 28.3974, "lng": 77.0408, "anchorPricePerSqft": 12800 },
+        { "name": "Southern Peripheral Road", "lat": 28.4134, "lng": 77.0262, "anchorPricePerSqft": 14200 },
         { "name": "Dwarka Expressway", "lat": 28.4669, "lng": 76.9968, "anchorPricePerSqft": 14600 },
         { "name": "New Gurgaon", "lat": 28.4036, "lng": 76.9643, "anchorPricePerSqft": 11200 },
+        { "name": "Noida Expressway", "lat": 28.5355, "lng": 77.391, "anchorPricePerSqft": 12300 },
+        { "name": "Noida Sector 62", "lat": 28.628, "lng": 77.3649, "anchorPricePerSqft": 9800 },
         { "name": "Noida Sector 150", "lat": 28.2084, "lng": 77.4625, "anchorPricePerSqft": 11000 },
         { "name": "Greater Noida West", "lat": 28.6125, "lng": 77.4326, "anchorPricePerSqft": 7300 },
+        { "name": "Pari Chowk", "lat": 28.4744, "lng": 77.503, "anchorPricePerSqft": 8900 },
+        { "name": "Yamuna Expressway", "lat": 28.3445, "lng": 77.5575, "anchorPricePerSqft": 6900 },
         { "name": "Hauz Khas", "lat": 28.5494, "lng": 77.2001, "anchorPricePerSqft": 26800 },
+        { "name": "Saket", "lat": 28.5245, "lng": 77.2066, "anchorPricePerSqft": 23800 },
+        { "name": "Vasant Kunj", "lat": 28.5273, "lng": 77.1588, "anchorPricePerSqft": 22100 },
         { "name": "Dwarka Sector 21", "lat": 28.5515, "lng": 77.0565, "anchorPricePerSqft": 16200 }
+        ,{ "name": "Indirapuram", "lat": 28.6469, "lng": 77.3704, "anchorPricePerSqft": 8200 }
+        ,{ "name": "Raj Nagar Extension", "lat": 28.6785, "lng": 77.4246, "anchorPricePerSqft": 6100 }
+        ,{ "name": "Greater Faridabad", "lat": 28.4089, "lng": 77.3561, "anchorPricePerSqft": 7200 }
       ]
     },
     {
