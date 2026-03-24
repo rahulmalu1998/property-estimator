@@ -1,19 +1,38 @@
 (function () {
   const YEARS = Array.from({ length: 10 }, (_, index) => 2015 + index);
   const PLAY_INTERVAL_MS = 1200;
+  const MIN_TIMELINE_IMAGERY_ZOOM = 12;
 
   const state = {
     cities: [],
     allAreas: [],
     areas: [],
     selectedCitySlugs: [],
+    basemapMode: "street",
     rankingSort: "overallScore",
     activeYear: YEARS[YEARS.length - 1],
     selectedAreaName: null,
     heatLayer: null,
+    imageryLayer: null,
+    imageryCache: new Map(),
+    imageryLayerCache: new Map(),
+    imageryPending: new Map(),
+    imageryRequestId: 0,
+    imagerySyncId: 0,
+    imageryScopeLoading: false,
+    imageryScopeLoadKey: "",
+    imageryViewportLoading: false,
+    imageryViewportLoadKey: "",
+    imageryViewportReady: new Set(),
+    imageryViewportPending: new Map(),
+    timelinePlaybackEnabled: true,
+    viewportChangeTimer: null,
+    yearSurfaceGroup: null,
     markersByName: new Map(),
+    yearSurfacesByName: new Map(),
     group: null,
     playbackTimer: null,
+    playbackRunId: 0,
   };
 
   const els = {
@@ -23,6 +42,11 @@
     yearSlider: document.getElementById("year-slider"),
     yearPill: document.getElementById("year-pill"),
     mapModeSummary: document.getElementById("map-mode-summary"),
+    mapTimelineBadge: document.getElementById("map-timeline-badge"),
+    mapTimelineState: document.getElementById("map-timeline-state"),
+    mapTimelineNote: document.getElementById("map-timeline-note"),
+    mapTimelineProgress: document.getElementById("map-timeline-progress"),
+    loadTimeline: document.getElementById("load-timeline"),
     playToggle: document.getElementById("play-toggle"),
     basemapStreet: document.getElementById("basemap-street"),
     basemapSatellite: document.getElementById("basemap-satellite"),
@@ -38,12 +62,16 @@
     rankingSort: document.getElementById("ranking-sort"),
   };
 
-  const map = L.map("map", { scrollWheelZoom: true }).setView([12.97, 77.59], 11);
+  const map = L.map("map", {
+    scrollWheelZoom: true,
+    fadeAnimation: false,
+  }).setView([12.97, 77.59], 11);
 
   const streetLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 19,
+    keepBuffer: 6,
   }).addTo(map);
 
   const satelliteLayer = L.tileLayer(
@@ -51,15 +79,20 @@
     {
       attribution: "Tiles &copy; Esri",
       maxZoom: 19,
+      keepBuffer: 6,
     }
   );
 
   function setBasemap(mode) {
+    state.basemapMode = mode;
     if (mode === "satellite") {
       if (map.hasLayer(streetLayer)) map.removeLayer(streetLayer);
       if (!map.hasLayer(satelliteLayer)) satelliteLayer.addTo(map);
       els.basemapStreet.classList.remove("is-active");
       els.basemapSatellite.classList.add("is-active");
+      updateSatelliteBaseVisibility();
+      handleViewportChanged(true);
+      syncYearImagery();
       return;
     }
 
@@ -67,6 +100,17 @@
     if (!map.hasLayer(streetLayer)) streetLayer.addTo(map);
     els.basemapSatellite.classList.remove("is-active");
     els.basemapStreet.classList.add("is-active");
+    if (state.imageryLayer) {
+      map.removeLayer(state.imageryLayer);
+      state.imageryLayer = null;
+    }
+    state.imageryScopeLoading = false;
+    state.imageryViewportLoading = false;
+    setPlayTimelineEnabled(true);
+    updateSatelliteBaseVisibility();
+    els.mapTimelineState.textContent = state.playbackTimer ? "Playback live" : "Street timeline";
+    els.mapTimelineNote.textContent =
+      "Street mode keeps the base map lightweight while the development overlay changes by year.";
   }
 
   function formatInr(n) {
@@ -96,6 +140,24 @@
     return area.investment?.score != null ? area.investment.score.toFixed(1) + " / 100" : "—";
   }
 
+  function effectiveGrowth(area) {
+    const metrics = area.investment?.metrics || {};
+    if (
+      typeof metrics.growth10yEffective === "number" &&
+      Number.isFinite(metrics.growth10yEffective)
+    ) {
+      return metrics.growth10yEffective;
+    }
+    return area.summary.growth ?? null;
+  }
+
+  function growthLabel(area, shortLabel) {
+    const source = area.investment?.metrics?.growthSource;
+    const estimated = source && source !== "observed_10y";
+    if (shortLabel) return estimated ? "10Y est." : "10Y change";
+    return estimated ? "10Y development estimate" : "10Y development change";
+  }
+
   function rankingMetricValue(area, sortKey) {
     const metrics = area.investment?.metrics || {};
     switch (sortKey) {
@@ -106,7 +168,7 @@
       case "pricePerSqft":
         return area.pricePerSqft ?? Number.NEGATIVE_INFINITY;
       case "growth10y":
-        return area.summary.growth ?? Number.NEGATIVE_INFINITY;
+        return effectiveGrowth(area) ?? Number.NEGATIVE_INFINITY;
       case "overallScore":
       default:
         return investmentScore(area);
@@ -222,8 +284,8 @@
       const scoreA = investmentScore(a);
       const scoreB = investmentScore(b);
       if (scoreB !== scoreA) return scoreB - scoreA;
-      const growthA = a.summary.growth ?? Number.NEGATIVE_INFINITY;
-      const growthB = b.summary.growth ?? Number.NEGATIVE_INFINITY;
+      const growthA = effectiveGrowth(a) ?? Number.NEGATIVE_INFINITY;
+      const growthB = effectiveGrowth(b) ?? Number.NEGATIVE_INFINITY;
       if (growthB !== growthA) return growthB - growthA;
       return b.pricePerSqft - a.pricePerSqft;
     });
@@ -317,8 +379,6 @@
   }
 
   function popupHtml(area) {
-    const m = area.model || {};
-    const summary = area.summary || {};
     const yearValue = getYearValue(area, state.activeYear);
     const delta = computeYearDelta(area, state.activeYear);
     const metrics = area.investment?.metrics || {};
@@ -337,25 +397,19 @@
       esc(formatPct(metrics.rentalYieldPct, 1)) +
       "<br/>5Y rent growth: " +
       esc(formatPct(metrics.rentGrowth5yPct, 0)) +
-      "<br/>Demand strength: " +
-      esc(String(metrics.demandStrength ?? "—")) +
       "<br/>Employment strength: " +
       esc(String(metrics.employmentStrength ?? "—")) +
-      "<br/>Risk penalty: " +
-      esc(String(metrics.riskPenalty ?? "—")) +
       '<br/><br/><strong>Development</strong><br/>' +
       "Year " +
       state.activeYear +
       ": " +
       esc(formatSigned(yearValue, 4)) +
-      "<br/>10Y change: " +
-      esc(formatSigned(summary.growth, 4)) +
+      "<br/>" +
+      esc(growthLabel(area, false)) +
+      ": " +
+      esc(formatSigned(effectiveGrowth(area), 4)) +
       "<br/>YoY move: " +
       esc(formatSigned(delta, 4)) +
-      "<br/>Infra z: " +
-      esc(String(m.infraZ ?? "—")) +
-      "<br/>Dev z: " +
-      esc(String(m.devZ ?? "—")) +
       "</div>"
     );
   }
@@ -465,13 +519,15 @@
                 : sortKey === "pricePerSqft"
                   ? "Price " + formatInr(area.pricePerSqft)
                   : sortKey === "growth10y"
-                    ? "10Y change " + formatSigned(area.summary.growth, 4)
+                    ? growthLabel(area, true) + " " + formatSigned(effectiveGrowth(area), 4)
                     : "Score " + investmentScoreLabel(area)
           ) +
           "</span><span class=\"ranking-subtle\">Yield " +
           esc(formatPct(metrics.rentalYieldPct, 1)) +
-          '</span><span class="ranking-subtle">10Y change ' +
-          esc(formatSigned(area.summary.growth, 4)) +
+          '</span><span class="ranking-subtle">' +
+          esc(growthLabel(area, true)) +
+          " " +
+          esc(formatSigned(effectiveGrowth(area), 4)) +
           "</span><span class=\"ranking-subtle\">Modeled " +
           esc(formatInr(area.pricePerSqft)) +
           " / sqft</span><span class=\"ranking-subtle\">Year " +
@@ -576,11 +632,15 @@
     els.selectedPrice.textContent = formatInr(area.pricePerSqft);
     els.selectedBadges.innerHTML = [
       "City <strong>" + esc(area.cityName) + "</strong>",
+      area.planned
+        ? "Pipeline <strong>" + esc(area.planStage || "planned growth corridor") + "</strong>"
+        : null,
       "Investment <strong>" + esc(investmentScoreLabel(area)) + "</strong>",
       "Rental yield <strong>" + esc(formatPct(metrics.rentalYieldPct, 1)) + "</strong>",
-      "10Y change <strong>" + esc(formatSigned(area.summary.growth, 4)) + "</strong>",
+      growthLabel(area, true) + " <strong>" + esc(formatSigned(effectiveGrowth(area), 4)) + "</strong>",
       "5Y rent growth <strong>" + esc(formatPct(metrics.rentGrowth5yPct, 0)) + "</strong>",
     ]
+      .filter(Boolean)
       .map((text) => '<div class="area-chip">' + text + "</div>")
       .join("");
     els.trendChart.innerHTML = chartSvg(area);
@@ -613,8 +673,23 @@
         value: metrics.riskPenalty != null ? String(metrics.riskPenalty) + " / 100" : "—",
       },
       {
-        label: "10Y change",
-        value: formatSigned(area.summary.growth, 4),
+        label: growthLabel(area, false),
+        value: formatSigned(effectiveGrowth(area), 4),
+      },
+      {
+        label: "Growth basis",
+        value:
+          area.investment?.metrics?.growthSource === "observed_10y"
+            ? "Observed"
+            : area.investment?.metrics?.growthSource === "trend_extrapolated"
+              ? "Trend extrapolated"
+              : area.investment?.metrics?.growthSource === "partial_history_extrapolated"
+                ? "Partial history extrapolated"
+                : area.investment?.metrics?.growthSource === "city_proxy_planned"
+                  ? "Planned-area city proxy"
+                  : area.investment?.metrics?.growthSource === "city_proxy"
+                    ? "City proxy"
+                    : "Unavailable",
       },
       {
         label: "Year " + state.activeYear,
@@ -658,12 +733,21 @@
   function updateYearUi() {
     els.yearSlider.value = String(state.activeYear);
     els.yearPill.textContent = String(state.activeYear);
+    els.mapTimelineBadge.textContent = "Year " + String(state.activeYear);
+
+    const yearIndex = YEARS.indexOf(state.activeYear);
+    const yearProgress = yearIndex >= 0 ? ((yearIndex + 1) / YEARS.length) * 100 : 100;
+    els.mapTimelineProgress.style.width = yearProgress.toFixed(1) + "%";
 
     const values = state.areas.map((area) => getYearValue(area, state.activeYear)).filter((value) => value != null);
     const norm = normalize(values, 0.5);
 
     if (norm.min == null || norm.max == null) {
       els.mapModeSummary.textContent = "No yearly development values available";
+      els.mapTimelineNote.textContent =
+        state.basemapMode === "satellite"
+          ? "Satellite imagery is syncing to the selected year for this scope."
+          : "Playback is running, but this scope has limited yearly development coverage.";
       return;
     }
 
@@ -672,6 +756,385 @@
       formatSigned(norm.min, 4) +
       " to " +
       formatSigned(norm.max, 4);
+    els.mapTimelineNote.textContent =
+      state.basemapMode === "satellite"
+        ? "Satellite imagery is aligning to " + String(state.activeYear) + "."
+        : "Development overlays are now showing conditions for " + String(state.activeYear) + ".";
+  }
+
+  function selectedCitiesKey() {
+    return state.selectedCitySlugs.slice().sort().join(",");
+  }
+
+  function imageryCacheKeyFor(year, citiesKey) {
+    return citiesKey + "::" + String(year);
+  }
+
+  function imageryCacheKey() {
+    return imageryCacheKeyFor(state.activeYear, selectedCitiesKey());
+  }
+
+  function historicalImageryAllowed() {
+    return state.basemapMode === "satellite" && map.getZoom() >= MIN_TIMELINE_IMAGERY_ZOOM;
+  }
+
+  function isViewportImageryReady() {
+    return historicalImageryAllowed() && state.imageryViewportReady.has(viewportKey());
+  }
+
+  function viewportTileRange() {
+    const zoom = map.getZoom();
+    const tileSize = 256;
+    const bounds = map.getBounds();
+    const northWest = map.project(bounds.getNorthWest(), zoom).divideBy(tileSize).floor();
+    const southEast = map.project(bounds.getSouthEast(), zoom).divideBy(tileSize).floor();
+    return {
+      zoom,
+      minX: northWest.x,
+      maxX: southEast.x,
+      minY: northWest.y,
+      maxY: southEast.y,
+    };
+  }
+
+  function viewportKey() {
+    const range = viewportTileRange();
+    return [
+      selectedCitiesKey(),
+      range.zoom,
+      range.minX,
+      range.maxX,
+      range.minY,
+      range.maxY,
+    ].join("::");
+  }
+
+  function renderTileUrl(urlFormat, x, y, z) {
+    return urlFormat
+      .replace("{x}", String(x))
+      .replace("{y}", String(y))
+      .replace("{z}", String(z));
+  }
+
+  function preloadTile(url) {
+    return new Promise((resolve) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.loading = "eager";
+      image.onload = () => resolve(true);
+      image.onerror = () => resolve(false);
+      image.src = url;
+    });
+  }
+
+  function preloadTilesForDoc(layerDoc) {
+    const range = viewportTileRange();
+    const tasks = [];
+    for (let x = range.minX; x <= range.maxX; x += 1) {
+      for (let y = range.minY; y <= range.maxY; y += 1) {
+        tasks.push(preloadTile(renderTileUrl(layerDoc.urlFormat, x, y, range.zoom)));
+      }
+    }
+    return Promise.allSettled(tasks);
+  }
+
+  function setPlayTimelineEnabled(enabled) {
+    state.timelinePlaybackEnabled = enabled;
+    syncTimelineButtons();
+  }
+
+  function syncTimelineButtons() {
+    const showLoadButton = historicalImageryAllowed();
+    els.loadTimeline.hidden = !showLoadButton;
+
+    if (state.imageryScopeLoading || state.imageryViewportLoading) {
+      els.loadTimeline.disabled = true;
+      els.loadTimeline.textContent = "Loading...";
+      els.playToggle.disabled = true;
+      els.playToggle.classList.remove("is-active");
+      els.playToggle.textContent = "Loading timeline...";
+      return;
+    }
+
+    if (showLoadButton) {
+      const ready = isViewportImageryReady();
+      els.loadTimeline.disabled = false;
+      els.loadTimeline.textContent = ready ? "Reload timeline" : "Load timeline";
+      els.playToggle.disabled = !ready || !state.timelinePlaybackEnabled;
+      els.playToggle.textContent = state.playbackTimer ? "Pause timeline" : "Play timeline";
+      return;
+    }
+
+    els.loadTimeline.disabled = true;
+    els.loadTimeline.textContent = "Load timeline";
+    els.playToggle.disabled = !state.timelinePlaybackEnabled;
+    els.playToggle.textContent = state.playbackTimer ? "Pause timeline" : "Play timeline";
+  }
+
+  function updateSatelliteBaseVisibility() {
+    const container = satelliteLayer.getContainer ? satelliteLayer.getContainer() : null;
+    if (!container) return;
+
+    const hideBase =
+      state.basemapMode === "satellite" &&
+      historicalImageryAllowed() &&
+      isViewportImageryReady() &&
+      state.imageryLayer &&
+      map.hasLayer(state.imageryLayer);
+
+    container.style.visibility = hideBase ? "hidden" : "visible";
+  }
+
+  function applyImageryLayer(layerDoc) {
+    if (!layerDoc?.urlFormat || state.basemapMode !== "satellite" || !historicalImageryAllowed()) {
+      return Promise.resolve(false);
+    }
+    const cacheKey = imageryCacheKeyFor(layerDoc.year, layerDoc.selectedCitySlugs.slice().sort().join(","));
+    let layer = state.imageryLayerCache.get(cacheKey);
+    if (!layer) {
+      layer = L.tileLayer(layerDoc.urlFormat, {
+        pane: "overlayPane",
+        maxZoom: 19,
+        keepBuffer: 6,
+        updateWhenZooming: false,
+        updateWhenIdle: true,
+        attribution: "Earth Engine annual imagery",
+      });
+      state.imageryLayerCache.set(cacheKey, layer);
+    }
+
+    const previousLayer = state.imageryLayer;
+
+    if (!map.hasLayer(layer)) {
+      layer.addTo(map);
+    }
+    state.imageryLayer = layer;
+
+    const container = layer.getContainer ? layer.getContainer() : null;
+    if (container) {
+      container.style.visibility = previousLayer && previousLayer !== layer ? "hidden" : "visible";
+    }
+
+    els.mapTimelineState.textContent = state.playbackTimer ? "Rendering frame" : "Rendering imagery";
+    els.mapTimelineNote.textContent =
+      "Rendering annual satellite composite for " + String(layerDoc.year) + " on the map.";
+
+    return waitForTileLayerReady(layer).then(() => {
+      const latest = state.imageryLayer === layer;
+      if (!latest || state.basemapMode !== "satellite") {
+        return false;
+      }
+
+      const latestContainer = layer.getContainer ? layer.getContainer() : null;
+      if (latestContainer) {
+        latestContainer.style.visibility = "visible";
+      }
+
+      if (previousLayer && previousLayer !== layer && map.hasLayer(previousLayer)) {
+        map.removeLayer(previousLayer);
+      }
+
+      bringOverlayLayersToFront();
+      updateSatelliteBaseVisibility();
+
+      els.mapTimelineState.textContent = state.playbackTimer ? "Playback live" : "Imagery live";
+      els.mapTimelineNote.textContent =
+        "Annual satellite composite for " + String(state.activeYear) + " loaded on the map.";
+      return true;
+    });
+  }
+
+  function waitForTileLayerReady(layer) {
+    if (!layer || !map.hasLayer(layer)) {
+      return Promise.resolve();
+    }
+
+    if (typeof layer.isLoading === "function" && !layer.isLoading()) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      let finished = false;
+      const complete = () => {
+        if (finished) return;
+        finished = true;
+        layer.off("load", onLoad);
+        layer.off("tileerror", onError);
+        resolve();
+      };
+      const onLoad = () => complete();
+      const onError = () => complete();
+      layer.on("load", onLoad);
+      layer.on("tileerror", onError);
+    });
+  }
+
+  function bringOverlayLayersToFront() {
+    if (state.yearSurfaceGroup && map.hasLayer(state.yearSurfaceGroup)) {
+      state.yearSurfaceGroup.eachLayer((entry) => {
+        if (entry && typeof entry.bringToFront === "function") {
+          entry.bringToFront();
+        }
+      });
+    }
+
+    if (state.group && map.hasLayer(state.group)) {
+      state.group.eachLayer((entry) => {
+        if (entry && typeof entry.bringToFront === "function") {
+          entry.bringToFront();
+        }
+      });
+    }
+  }
+
+  function fetchYearImagery(year, citiesKey) {
+    const key = imageryCacheKeyFor(year, citiesKey);
+    const cached = state.imageryCache.get(key);
+    if (cached) {
+      return Promise.resolve(cached);
+    }
+
+    const pending = state.imageryPending.get(key);
+    if (pending) {
+      return pending;
+    }
+
+    const request = fetch(
+      "/api/year-imagery?year=" +
+        encodeURIComponent(year) +
+        "&cities=" +
+        encodeURIComponent(citiesKey)
+    )
+      .then((response) => {
+        if (!response.ok) throw new Error("Imagery request failed");
+        return response.json();
+      })
+      .then((doc) => {
+        state.imageryCache.set(key, doc);
+        state.imageryPending.delete(key);
+        return doc;
+      })
+      .catch((error) => {
+        state.imageryPending.delete(key);
+        throw error;
+      });
+
+    state.imageryPending.set(key, request);
+    return request;
+  }
+
+  function preloadScopeImagery() {
+    if (state.basemapMode !== "satellite") {
+      state.imageryScopeLoading = false;
+      state.imageryViewportLoading = false;
+      setPlayTimelineEnabled(true);
+      return Promise.resolve();
+    }
+
+    const citiesKey = selectedCitiesKey();
+    const allReady = YEARS.every((year) => state.imageryCache.has(imageryCacheKeyFor(year, citiesKey)));
+    if (allReady) {
+      state.imageryScopeLoading = false;
+      state.imageryScopeLoadKey = citiesKey;
+      if (!state.imageryViewportLoading) {
+        setPlayTimelineEnabled(true);
+      }
+      return Promise.resolve();
+    }
+
+    state.imageryScopeLoading = true;
+    state.imageryScopeLoadKey = citiesKey;
+    stopPlayback();
+    setPlayTimelineEnabled(false);
+    els.mapTimelineState.textContent = "Loading imagery";
+    els.mapTimelineNote.textContent =
+      "Loading annual imagery for 2015-2024 for the selected city scope.";
+
+    return Promise.allSettled(YEARS.map((year) => fetchYearImagery(year, citiesKey))).then((results) => {
+      if (state.imageryScopeLoadKey !== citiesKey) return;
+      state.imageryScopeLoading = false;
+      if (!state.imageryViewportLoading) {
+        setPlayTimelineEnabled(true);
+      }
+
+      const readyCount = results.filter((result) => result.status === "fulfilled").length;
+      if (readyCount) {
+        els.mapTimelineState.textContent = "Imagery ready";
+        els.mapTimelineNote.textContent =
+          "Loaded " +
+          String(readyCount) +
+          " yearly imagery layers for this scope. Playback is now enabled.";
+        syncYearImagery();
+      } else {
+        els.mapTimelineState.textContent = "Static view";
+        els.mapTimelineNote.textContent =
+          "Historical imagery could not be preloaded, so playback remains on the development overlay only.";
+      }
+    });
+  }
+
+  function syncYearImagery() {
+    if (state.basemapMode !== "satellite") {
+      if (state.imageryLayer) {
+        map.removeLayer(state.imageryLayer);
+        state.imageryLayer = null;
+      }
+      updateSatelliteBaseVisibility();
+      return Promise.resolve(false);
+    }
+
+    if (!historicalImageryAllowed()) {
+      if (state.imageryLayer) {
+        map.removeLayer(state.imageryLayer);
+        state.imageryLayer = null;
+      }
+      updateSatelliteBaseVisibility();
+      els.mapTimelineState.textContent = state.playbackTimer ? "Playback live" : "Satellite overview";
+      els.mapTimelineNote.textContent =
+        "Zoom in to level " +
+        String(MIN_TIMELINE_IMAGERY_ZOOM) +
+        " or closer to activate yearly satellite imagery. Latest satellite view remains on the map.";
+      return Promise.resolve(false);
+    }
+
+    if (!isViewportImageryReady()) {
+      if (state.imageryLayer) {
+        map.removeLayer(state.imageryLayer);
+        state.imageryLayer = null;
+      }
+      updateSatelliteBaseVisibility();
+      els.mapTimelineState.textContent = "Timeline not loaded";
+      els.mapTimelineNote.textContent =
+        "Click Load timeline to preload yearly satellite imagery for this zoomed-in map view.";
+      return Promise.resolve(false);
+    }
+
+    const syncId = ++state.imagerySyncId;
+    const key = imageryCacheKey();
+    const cached = state.imageryCache.get(key);
+    if (cached) {
+      if (syncId !== state.imagerySyncId) return Promise.resolve(false);
+      return applyImageryLayer(cached);
+    }
+
+    const requestId = ++state.imageryRequestId;
+    els.mapTimelineState.textContent = "Loading imagery";
+    els.mapTimelineNote.textContent =
+      "Fetching annual satellite composite for " + String(state.activeYear) + ".";
+
+    return fetchYearImagery(state.activeYear, selectedCitiesKey())
+      .then((doc) => {
+        if (requestId !== state.imageryRequestId) return false;
+        if (syncId !== state.imagerySyncId) return false;
+        return applyImageryLayer(doc);
+      })
+      .catch(() => {
+        if (requestId !== state.imageryRequestId) return false;
+        els.mapTimelineState.textContent = state.playbackTimer ? "Playback live" : "Static view";
+        els.mapTimelineNote.textContent =
+          "Historical imagery is unavailable for this year right now, so the development overlay remains active.";
+        return false;
+      });
   }
 
   function filterAreasByScope() {
@@ -741,9 +1204,12 @@
 
     state.areas.forEach((area) => {
       const marker = state.markersByName.get(area.name);
+      const surface = state.yearSurfacesByName.get(area.name);
       if (!marker) return;
 
       const level = norm.scale(getYearValue(area, state.activeYear));
+      const delta = computeYearDelta(area, state.activeYear);
+      const deltaBoost = delta != null ? clamp((delta + 0.04) / 0.08, 0, 1) : 0.5;
       const growthLevel = growthNorm.scale(area.summary.growth);
       const radius = 6 + level * 10 + growthLevel * 2.5;
       const fillColor = colorForLevel(level);
@@ -758,8 +1224,20 @@
       marker.setPopupContent(popupHtml(area));
       if (selected) marker.bringToFront();
 
+      if (surface) {
+        surface.setStyle({
+          stroke: selected,
+          weight: selected ? 1.4 : 0,
+          color: selected ? "rgba(29,27,25,0.48)" : fillColor,
+          fillColor,
+          fillOpacity: 0.1 + level * 0.14 + deltaBoost * 0.08 + (selected ? 0.08 : 0),
+        });
+        surface.setRadius(700 + level * 1500 + deltaBoost * 650 + growthLevel * 450);
+        if (selected) surface.bringToFront();
+      }
+
       const priceInfluence = clamp(area.pricePerSqft / 25000, 0.22, 1);
-      heatPoints.push([area.lat, area.lng, 0.22 + level * 0.58 + priceInfluence * 0.24]);
+      heatPoints.push([area.lat, area.lng, 0.18 + level * 0.48 + priceInfluence * 0.16 + deltaBoost * 0.18]);
     });
 
     if (state.heatLayer) {
@@ -788,42 +1266,174 @@
   function setYear(year) {
     state.activeYear = clamp(year, YEARS[0], YEARS[YEARS.length - 1]);
     updateYearUi();
+    const imageryPromise = syncYearImagery();
     renderRanking(state.areas);
     updateMap();
     const area = state.areas.find((entry) => entry.name === state.selectedAreaName);
     if (area) renderSelectedArea(area);
+    return imageryPromise;
   }
 
   function stopPlayback() {
     if (state.playbackTimer) {
-      window.clearInterval(state.playbackTimer);
+      window.clearTimeout(state.playbackTimer);
       state.playbackTimer = null;
     }
+    state.playbackRunId += 1;
     els.playToggle.classList.remove("is-active");
-    els.playToggle.textContent = "Play timeline";
+    if (!state.imageryScopeLoading) {
+      syncTimelineButtons();
+    }
+    els.mapTimelineState.textContent = "Static view";
+    if (state.basemapMode === "satellite") {
+      syncYearImagery();
+    }
   }
 
   function startPlayback() {
+    if (state.imageryScopeLoading || state.imageryViewportLoading || els.playToggle.disabled) return;
     stopPlayback();
     els.playToggle.classList.add("is-active");
-    els.playToggle.textContent = "Pause timeline";
-    state.playbackTimer = window.setInterval(() => {
+    syncTimelineButtons();
+    els.mapTimelineState.textContent = historicalImageryAllowed() ? "Playback live" : "Overlay playback";
+    if (!historicalImageryAllowed()) {
+      els.mapTimelineNote.textContent =
+        "Timeline playback is updating only the development overlay until you zoom in closer.";
+    }
+    const runId = ++state.playbackRunId;
+    const playNextFrame = () => {
+      if (runId !== state.playbackRunId) return;
       const nextYear =
         state.activeYear >= YEARS[YEARS.length - 1] ? YEARS[0] : state.activeYear + 1;
-      setYear(nextYear);
-    }, PLAY_INTERVAL_MS);
+      Promise.resolve(setYear(nextYear))
+        .catch(() => false)
+        .then(() => {
+          if (runId !== state.playbackRunId) return;
+          state.playbackTimer = window.setTimeout(playNextFrame, PLAY_INTERVAL_MS);
+        });
+    };
+
+    state.playbackTimer = window.setTimeout(playNextFrame, PLAY_INTERVAL_MS);
+  }
+
+  function preloadViewportImagery() {
+    if (state.basemapMode !== "satellite") {
+      state.imageryViewportLoading = false;
+      if (!state.imageryScopeLoading) setPlayTimelineEnabled(true);
+      return Promise.resolve();
+    }
+
+    if (!historicalImageryAllowed()) {
+      state.imageryViewportLoading = false;
+      state.imageryViewportLoadKey = "";
+      if (!state.imageryScopeLoading) setPlayTimelineEnabled(true);
+      syncYearImagery();
+      return Promise.resolve();
+    }
+
+    const key = viewportKey();
+    const ready = state.imageryViewportReady.has(key);
+    if (ready) {
+      state.imageryViewportLoading = false;
+      state.imageryViewportLoadKey = key;
+      if (!state.imageryScopeLoading) setPlayTimelineEnabled(true);
+      syncYearImagery();
+      return Promise.resolve();
+    }
+
+    const existing = state.imageryViewportPending.get(key);
+    if (existing) {
+      state.imageryViewportLoading = true;
+      setPlayTimelineEnabled(false);
+      return existing;
+    }
+
+    state.imageryViewportLoading = true;
+    state.imageryViewportLoadKey = key;
+    stopPlayback();
+    setPlayTimelineEnabled(false);
+    els.mapTimelineState.textContent = "Loading timeline";
+    els.mapTimelineNote.textContent =
+      "Loading yearly imagery for the current zoomed-in map view before playback starts.";
+
+    const request = preloadScopeImagery()
+      .then(() => Promise.all(YEARS.map((year) => fetchYearImagery(year, selectedCitiesKey()))))
+      .then((docs) => Promise.allSettled(docs.map((doc) => preloadTilesForDoc(doc))))
+      .then((results) => {
+        state.imageryViewportPending.delete(key);
+        if (state.basemapMode !== "satellite" || state.imageryViewportLoadKey !== key) return;
+        state.imageryViewportLoading = false;
+        state.imageryViewportReady.add(key);
+        if (!state.imageryScopeLoading) setPlayTimelineEnabled(true);
+
+        const readyCount = results.filter((result) => result.status === "fulfilled").length;
+        els.mapTimelineState.textContent = "Timeline ready";
+        els.mapTimelineNote.textContent =
+          "Loaded cached yearly imagery for " +
+          String(readyCount) +
+          " timeline frames in this map view. Playback is ready.";
+        syncYearImagery();
+      })
+      .catch(() => {
+        state.imageryViewportPending.delete(key);
+        if (state.basemapMode !== "satellite" || state.imageryViewportLoadKey !== key) return;
+        state.imageryViewportLoading = false;
+        if (!state.imageryScopeLoading) setPlayTimelineEnabled(true);
+        els.mapTimelineState.textContent = "Static view";
+        els.mapTimelineNote.textContent =
+          "Timeline imagery could not be fully preloaded for this map view, so the latest satellite map stays active.";
+        syncYearImagery();
+      });
+
+    state.imageryViewportPending.set(key, request);
+    return request;
+  }
+
+  function handleViewportChanged(immediate) {
+    if (state.basemapMode !== "satellite") return;
+    if (state.viewportChangeTimer) {
+      window.clearTimeout(state.viewportChangeTimer);
+      state.viewportChangeTimer = null;
+    }
+
+    const run = () => {
+      stopPlayback();
+      syncYearImagery();
+      syncTimelineButtons();
+      if (historicalImageryAllowed() && !isViewportImageryReady()) {
+        els.mapTimelineState.textContent = "Timeline not loaded";
+        els.mapTimelineNote.textContent =
+          "Zoomed-in satellite history is available here. Click Load timeline to prepare all yearly frames.";
+      }
+    };
+
+    if (immediate) {
+      run();
+      return;
+    }
+
+    state.viewportChangeTimer = window.setTimeout(run, 180);
   }
 
   function mountMap(areas) {
+    if (state.imageryLayer) {
+      map.removeLayer(state.imageryLayer);
+      state.imageryLayer = null;
+    }
     if (state.heatLayer) {
       map.removeLayer(state.heatLayer);
       state.heatLayer = null;
+    }
+    if (state.yearSurfaceGroup) {
+      map.removeLayer(state.yearSurfaceGroup);
+      state.yearSurfaceGroup = null;
     }
     if (state.group) {
       map.removeLayer(state.group);
       state.group = null;
     }
     state.markersByName.clear();
+    state.yearSurfacesByName.clear();
 
     const prices = areas.map((area) => area.pricePerSqft);
     const minPrice = Math.min(...prices);
@@ -844,8 +1454,19 @@
       },
     }).addTo(map);
 
+    state.yearSurfaceGroup = L.layerGroup();
     state.group = L.featureGroup();
     areas.forEach((area) => {
+      const surface = L.circle([area.lat, area.lng], {
+        radius: 1100,
+        stroke: false,
+        fillColor: "#84aa96",
+        fillOpacity: 0.16,
+        interactive: false,
+      });
+      surface.addTo(state.yearSurfaceGroup);
+      state.yearSurfacesByName.set(area.name, surface);
+
       const marker = L.circleMarker([area.lat, area.lng], {
         radius: 8,
         weight: 2,
@@ -860,9 +1481,12 @@
       marker.addTo(state.group);
       state.markersByName.set(area.name, marker);
     });
+    state.yearSurfaceGroup.addTo(map);
     state.group.addTo(map);
     map.fitBounds(state.group.getBounds().pad(0.12));
     updateMap();
+    syncYearImagery();
+    handleViewportChanged(true);
   }
 
   function applyCitySelection() {
@@ -895,12 +1519,20 @@
       else startPlayback();
     });
 
+    els.loadTimeline.addEventListener("click", () => {
+      preloadViewportImagery();
+    });
+
     els.basemapStreet.addEventListener("click", () => {
       setBasemap("street");
     });
 
     els.basemapSatellite.addEventListener("click", () => {
       setBasemap("satellite");
+    });
+
+    map.on("moveend", () => {
+      handleViewportChanged(false);
     });
 
     els.rankingList.addEventListener("click", (event) => {

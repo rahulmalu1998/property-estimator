@@ -4,7 +4,7 @@
   "private": true,
   "description": "Bengaluru property heatmap with news + development-feature price model",
   "engines": {
-    "node": ">=22.0.0"
+    "node": "22.x"
   },
   "scripts": {
     "start": "node server.js",

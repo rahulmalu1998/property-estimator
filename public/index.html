@@ -56,7 +56,12 @@
                   <span id="map-mode-summary">Latest available development signal</span>
                 </div>
               </div>
-              <button class="play-btn" id="play-toggle" type="button">Play timeline</button>
+              <div class="timeline-actions">
+                <button class="play-btn play-btn-secondary" id="load-timeline" type="button" hidden>
+                  Load timeline
+                </button>
+                <button class="play-btn" id="play-toggle" type="button">Play timeline</button>
+              </div>
             </div>
 
             <label class="year-control" for="year-slider">
@@ -99,7 +104,23 @@
                 </div>
               </div>
             </div>
-            <div id="map" role="application" aria-label="Map of Indian property markets"></div>
+            <div class="map-frame">
+              <div class="map-timeline-overlay" aria-live="polite">
+                <div class="map-timeline-badge-row">
+                  <div class="map-timeline-badge" id="map-timeline-badge">Year 2024</div>
+                  <div class="map-timeline-badge map-timeline-badge-soft" id="map-timeline-state">
+                    Static view
+                  </div>
+                </div>
+                <div class="map-timeline-note" id="map-timeline-note">
+                  Development playback updates the live surface overlay on this map.
+                </div>
+                <div class="map-timeline-progress-track">
+                  <div class="map-timeline-progress-fill" id="map-timeline-progress"></div>
+                </div>
+              </div>
+              <div id="map" role="application" aria-label="Map of Indian property markets"></div>
+            </div>
           </section>
 
           <aside class="inspector">

@@ -20,7 +20,8 @@
         { "name": "Airport Road Mohali", "lat": 30.6917, "lng": 76.7361, "anchorPricePerSqft": 8800 },
         { "name": "Zirakpur", "lat": 30.6425, "lng": 76.8173, "anchorPricePerSqft": 7100 },
         { "name": "New Chandigarh", "lat": 30.7775, "lng": 76.7241, "anchorPricePerSqft": 7600 },
-        { "name": "Panchkula Sector 20", "lat": 30.6942, "lng": 76.8606, "anchorPricePerSqft": 8600 }
+        { "name": "Panchkula Sector 20", "lat": 30.6942, "lng": 76.8606, "anchorPricePerSqft": 8600 },
+        { "name": "Mullanpur", "lat": 30.7713, "lng": 76.7269, "anchorPricePerSqft": 7200, "planned": true, "planStage": "new capital extension" }
       ]
     },
     {
@@ -39,7 +40,8 @@
         { "name": "HITEC City", "lat": 17.4504, "lng": 78.3803, "anchorPricePerSqft": 13600 },
         { "name": "Kondapur", "lat": 17.4615, "lng": 78.367, "anchorPricePerSqft": 9800 },
         { "name": "Kokapet", "lat": 17.3901, "lng": 78.3404, "anchorPricePerSqft": 11400 },
-        { "name": "Miyapur", "lat": 17.4967, "lng": 78.3562, "anchorPricePerSqft": 7600 }
+        { "name": "Miyapur", "lat": 17.4967, "lng": 78.3562, "anchorPricePerSqft": 7600 },
+        { "name": "Tellapur", "lat": 17.4673, "lng": 78.3089, "anchorPricePerSqft": 9600, "planned": true, "planStage": "western growth corridor" }
       ]
     },
     {
@@ -58,7 +60,8 @@
         { "name": "Mansarovar", "lat": 26.8556, "lng": 75.7649, "anchorPricePerSqft": 6200 },
         { "name": "Ajmer Road", "lat": 26.8971, "lng": 75.7059, "anchorPricePerSqft": 5900 },
         { "name": "Tonk Road", "lat": 26.8467, "lng": 75.7984, "anchorPricePerSqft": 6400 },
-        { "name": "Sirsi Road", "lat": 26.9442, "lng": 75.7067, "anchorPricePerSqft": 5400 }
+        { "name": "Sirsi Road", "lat": 26.9442, "lng": 75.7067, "anchorPricePerSqft": 5400 },
+        { "name": "Mahindra SEZ / Ajmer Road West", "lat": 26.8629, "lng": 75.6502, "anchorPricePerSqft": 5200, "planned": true, "planStage": "westward industrial corridor" }
       ]
     },
     {
@@ -77,7 +80,8 @@
         { "name": "Hazratganj", "lat": 26.8497, "lng": 80.9462, "anchorPricePerSqft": 9800 },
         { "name": "Aliganj", "lat": 26.8955, "lng": 80.9468, "anchorPricePerSqft": 7000 },
         { "name": "Indira Nagar Lucknow", "lat": 26.8813, "lng": 81.0148, "anchorPricePerSqft": 5800 },
-        { "name": "Jankipuram", "lat": 26.9408, "lng": 80.9215, "anchorPricePerSqft": 5200 }
+        { "name": "Jankipuram", "lat": 26.9408, "lng": 80.9215, "anchorPricePerSqft": 5200 },
+        { "name": "Sultanpur Road", "lat": 26.7732, "lng": 81.0493, "anchorPricePerSqft": 6000, "planned": true, "planStage": "institutional growth axis" }
       ]
     },
     {
@@ -96,7 +100,8 @@
         { "name": "Pahala", "lat": 20.3001, "lng": 85.9085, "anchorPricePerSqft": 5000 },
         { "name": "Old Town Bhubaneswar", "lat": 20.2378, "lng": 85.8339, "anchorPricePerSqft": 6200 },
         { "name": "Jaydev Vihar", "lat": 20.3019, "lng": 85.8207, "anchorPricePerSqft": 7600 },
-        { "name": "Tamando", "lat": 20.2206, "lng": 85.7558, "anchorPricePerSqft": 4700 }
+        { "name": "Tamando", "lat": 20.2206, "lng": 85.7558, "anchorPricePerSqft": 4700 },
+        { "name": "Trisulia", "lat": 20.3741, "lng": 85.8819, "anchorPricePerSqft": 5300, "planned": true, "planStage": "metro bridge growth belt" }
       ]
     },
     {
@@ -115,7 +120,8 @@
         { "name": "Bawadia Kalan", "lat": 23.1775, "lng": 77.4388, "anchorPricePerSqft": 5000 },
         { "name": "Ayodhya Bypass", "lat": 23.2891, "lng": 77.4626, "anchorPricePerSqft": 4300 },
         { "name": "BHEL", "lat": 23.2765, "lng": 77.4639, "anchorPricePerSqft": 3900 },
-        { "name": "Katara Hills", "lat": 23.1383, "lng": 77.4094, "anchorPricePerSqft": 4100 }
+        { "name": "Katara Hills", "lat": 23.1383, "lng": 77.4094, "anchorPricePerSqft": 4100 },
+        { "name": "Ratibad", "lat": 23.1703, "lng": 77.3605, "anchorPricePerSqft": 3800, "planned": true, "planStage": "southern expansion corridor" }
       ]
     },
     {
@@ -134,7 +140,8 @@
         { "name": "Thaltej", "lat": 23.0497, "lng": 72.4952, "anchorPricePerSqft": 8900 },
         { "name": "Science City", "lat": 23.0714, "lng": 72.4936, "anchorPricePerSqft": 8200 },
         { "name": "South Bopal", "lat": 23.0006, "lng": 72.4635, "anchorPricePerSqft": 6900 },
-        { "name": "Gota", "lat": 23.1074, "lng": 72.5411, "anchorPricePerSqft": 6100 }
+        { "name": "Gota", "lat": 23.1074, "lng": 72.5411, "anchorPricePerSqft": 6100 },
+        { "name": "GIFT City / Gandhinagar", "lat": 23.1645, "lng": 72.6835, "anchorPricePerSqft": 9200, "planned": true, "planStage": "financial district expansion" }
       ]
     },
     {
@@ -153,7 +160,8 @@
         { "name": "Althan", "lat": 21.1476, "lng": 72.7977, "anchorPricePerSqft": 6200 },
         { "name": "City Light", "lat": 21.1719, "lng": 72.7937, "anchorPricePerSqft": 7800 },
         { "name": "Dumas Road", "lat": 21.1321, "lng": 72.7518, "anchorPricePerSqft": 7600 },
-        { "name": "Jahangirpura", "lat": 21.2274, "lng": 72.7875, "anchorPricePerSqft": 5600 }
+        { "name": "Jahangirpura", "lat": 21.2274, "lng": 72.7875, "anchorPricePerSqft": 5600 },
+        { "name": "Dream City", "lat": 21.1098, "lng": 72.7197, "anchorPricePerSqft": 7000, "planned": true, "planStage": "integrated township corridor" }
       ]
     },
     {
@@ -172,7 +180,8 @@
         { "name": "Manish Nagar", "lat": 21.0934, "lng": 79.0528, "anchorPricePerSqft": 5800 },
         { "name": "Besa", "lat": 21.0892, "lng": 79.0951, "anchorPricePerSqft": 5200 },
         { "name": "Narendra Nagar", "lat": 21.1131, "lng": 79.0896, "anchorPricePerSqft": 6100 },
-        { "name": "Hingna Road", "lat": 21.1246, "lng": 79.0038, "anchorPricePerSqft": 4900 }
+        { "name": "Hingna Road", "lat": 21.1246, "lng": 79.0038, "anchorPricePerSqft": 4900 },
+        { "name": "Jamtha", "lat": 21.0089, "lng": 79.0443, "anchorPricePerSqft": 4800, "planned": true, "planStage": "stadium-led growth pocket" }
       ]
     },
     {
@@ -191,7 +200,8 @@
         { "name": "Lal Bazar", "lat": 34.1208, "lng": 74.8221, "anchorPricePerSqft": 5600 },
         { "name": "Chanapora", "lat": 34.0523, "lng": 74.8028, "anchorPricePerSqft": 6100 },
         { "name": "Sanat Nagar Srinagar", "lat": 34.0537, "lng": 74.7918, "anchorPricePerSqft": 6400 },
-        { "name": "Humhama", "lat": 33.9995, "lng": 74.7612, "anchorPricePerSqft": 5500 }
+        { "name": "Humhama", "lat": 33.9995, "lng": 74.7612, "anchorPricePerSqft": 5500 },
+        { "name": "Nowgam", "lat": 34.0479, "lng": 74.7742, "anchorPricePerSqft": 5200, "planned": true, "planStage": "transport-linked expansion" }
       ]
     },
     {
@@ -210,7 +220,8 @@
         { "name": "White Avenue", "lat": 31.6495, "lng": 74.8763, "anchorPricePerSqft": 7100 },
         { "name": "New Amritsar", "lat": 31.6803, "lng": 74.8217, "anchorPricePerSqft": 5800 },
         { "name": "Majitha Road", "lat": 31.6605, "lng": 74.8619, "anchorPricePerSqft": 6000 },
-        { "name": "Lawrence Road", "lat": 31.6324, "lng": 74.8741, "anchorPricePerSqft": 7300 }
+        { "name": "Lawrence Road", "lat": 31.6324, "lng": 74.8741, "anchorPricePerSqft": 7300 },
+        { "name": "Ajnala Road", "lat": 31.673, "lng": 74.8352, "anchorPricePerSqft": 5600, "planned": true, "planStage": "northwest growth corridor" }
       ]
     },
     {
@@ -229,7 +240,8 @@
         { "name": "Chandigarh Road Ludhiana", "lat": 30.9142, "lng": 75.9174, "anchorPricePerSqft": 5600 },
         { "name": "Dugri", "lat": 30.8663, "lng": 75.8505, "anchorPricePerSqft": 5900 },
         { "name": "Sidhwan Canal", "lat": 30.9008, "lng": 75.8081, "anchorPricePerSqft": 6500 },
-        { "name": "Gill Road", "lat": 30.8798, "lng": 75.8704, "anchorPricePerSqft": 5200 }
+        { "name": "Gill Road", "lat": 30.8798, "lng": 75.8704, "anchorPricePerSqft": 5200 },
+        { "name": "Hambran Road", "lat": 30.9206, "lng": 75.7856, "anchorPricePerSqft": 5800, "planned": true, "planStage": "west Ludhiana corridor" }
       ]
     },
     {
@@ -264,7 +276,9 @@
         { "name": "Bannerghatta Road", "lat": 12.8779, "lng": 77.5977, "anchorPricePerSqft": 8800 },
         { "name": "Electronic City", "lat": 12.8456, "lng": 77.6603, "anchorPricePerSqft": 6200 },
         { "name": "Yelahanka", "lat": 13.1007, "lng": 77.5963, "anchorPricePerSqft": 7800 },
-        { "name": "Kanakapura Road (outer)", "lat": 12.864, "lng": 77.537, "anchorPricePerSqft": 6500 }
+        { "name": "Kanakapura Road (outer)", "lat": 12.864, "lng": 77.537, "anchorPricePerSqft": 6500 },
+        { "name": "Sarjapur Road", "lat": 12.9075, "lng": 77.7143, "anchorPricePerSqft": 9200, "planned": true, "planStage": "east growth corridor" },
+        { "name": "Devanahalli", "lat": 13.2467, "lng": 77.7137, "anchorPricePerSqft": 6800, "planned": true, "planStage": "airport growth corridor" }
       ]
     },
     {
@@ -297,6 +311,8 @@
         ,{ "name": "Indirapuram", "lat": 28.6469, "lng": 77.3704, "anchorPricePerSqft": 8200 }
         ,{ "name": "Raj Nagar Extension", "lat": 28.6785, "lng": 77.4246, "anchorPricePerSqft": 6100 }
         ,{ "name": "Greater Faridabad", "lat": 28.4089, "lng": 77.3561, "anchorPricePerSqft": 7200 }
+        ,{ "name": "Jewar Airport", "lat": 28.1236, "lng": 77.5572, "anchorPricePerSqft": 6400, "planned": true, "planStage": "airport influence zone" }
+        ,{ "name": "Sohna Extension", "lat": 28.2392, "lng": 77.0667, "anchorPricePerSqft": 9800, "planned": true, "planStage": "southern growth corridor" }
       ]
     },
     {
@@ -315,7 +331,8 @@
         { "name": "Andheri West", "lat": 19.1364, "lng": 72.8272, "anchorPricePerSqft": 28200 },
         { "name": "Chembur", "lat": 19.0522, "lng": 72.9005, "anchorPricePerSqft": 23200 },
         { "name": "Thane West", "lat": 19.2183, "lng": 72.9781, "anchorPricePerSqft": 18200 },
-        { "name": "Vashi", "lat": 19.0771, "lng": 72.9986, "anchorPricePerSqft": 19400 }
+        { "name": "Vashi", "lat": 19.0771, "lng": 72.9986, "anchorPricePerSqft": 19400 },
+        { "name": "Panvel", "lat": 18.9894, "lng": 73.1175, "anchorPricePerSqft": 12800, "planned": true, "planStage": "airport and trans-harbour corridor" }
       ]
     },
     {
@@ -334,7 +351,9 @@
         { "name": "Wakad", "lat": 18.5975, "lng": 73.7637, "anchorPricePerSqft": 9900 },
         { "name": "Hadapsar", "lat": 18.4966, "lng": 73.9419, "anchorPricePerSqft": 9100 },
         { "name": "Viman Nagar", "lat": 18.5679, "lng": 73.9143, "anchorPricePerSqft": 13600 },
-        { "name": "Shivajinagar", "lat": 18.5308, "lng": 73.8475, "anchorPricePerSqft": 14500 }
+        { "name": "Shivajinagar", "lat": 18.5308, "lng": 73.8475, "anchorPricePerSqft": 14500 },
+        { "name": "Tathawade", "lat": 18.6203, "lng": 73.7421, "anchorPricePerSqft": 8600, "planned": true, "planStage": "west IT corridor" },
+        { "name": "Mahalunge", "lat": 18.5938, "lng": 73.7477, "anchorPricePerSqft": 9400, "planned": true, "planStage": "balewadi high-growth belt" }
       ]
     },
     {
@@ -353,7 +372,9 @@
         { "name": "OMR / Perungudi", "lat": 12.9629, "lng": 80.2411, "anchorPricePerSqft": 10100 },
         { "name": "Porur", "lat": 13.035, "lng": 80.1567, "anchorPricePerSqft": 9600 },
         { "name": "Mylapore", "lat": 13.0335, "lng": 80.2697, "anchorPricePerSqft": 16600 },
-        { "name": "Medavakkam", "lat": 12.9172, "lng": 80.1926, "anchorPricePerSqft": 7600 }
+        { "name": "Medavakkam", "lat": 12.9172, "lng": 80.1926, "anchorPricePerSqft": 7600 },
+        { "name": "Siruseri", "lat": 12.8228, "lng": 80.2187, "anchorPricePerSqft": 6900, "planned": true, "planStage": "OMR expansion corridor" },
+        { "name": "Oragadam", "lat": 12.8278, "lng": 79.9771, "anchorPricePerSqft": 6100, "planned": true, "planStage": "industrial expansion corridor" }
       ]
     },
     {
@@ -372,7 +393,8 @@
         { "name": "Ballygunge", "lat": 22.5222, "lng": 88.3689, "anchorPricePerSqft": 16600 },
         { "name": "Alipore", "lat": 22.5312, "lng": 88.3334, "anchorPricePerSqft": 17600 },
         { "name": "Tollygunge", "lat": 22.4937, "lng": 88.3459, "anchorPricePerSqft": 9100 },
-        { "name": "Garia", "lat": 22.4626, "lng": 88.3857, "anchorPricePerSqft": 6200 }
+        { "name": "Garia", "lat": 22.4626, "lng": 88.3857, "anchorPricePerSqft": 6200 },
+        { "name": "Joka", "lat": 22.4268, "lng": 88.3017, "anchorPricePerSqft": 6400, "planned": true, "planStage": "metro-led south-west corridor" }
       ]
     }
   ]
