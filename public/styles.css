@@ -501,12 +501,38 @@ h2 {
 
 .panel-ranking-wide {
   padding: 24px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 620px;
+  max-height: 620px;
 }
 
 .ranking-list {
   display: grid;
   gap: 10px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  align-content: start;
+}
+
+.ranking-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.ranking-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+}
+
+.ranking-list::-webkit-scrollbar-thumb {
+  background: rgba(197, 95, 53, 0.48);
+  border-radius: 999px;
+}
+
+.ranking-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(197, 95, 53, 0.68);
 }
 
 .ranking-item {
@@ -621,6 +647,11 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .panel-ranking-wide {
+    min-height: 560px;
+    max-height: 560px;
+  }
+
   .ranking-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -658,6 +689,11 @@ h2 {
 
   .ranking-list {
     grid-template-columns: 1fr;
+  }
+
+  .panel-ranking-wide {
+    min-height: 520px;
+    max-height: 520px;
   }
 
   #map {

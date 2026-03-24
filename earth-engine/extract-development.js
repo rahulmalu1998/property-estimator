@@ -373,8 +373,8 @@ async function main() {
 
   if (write) {
     const dataDir = path.join(__dirname, '..', 'data');
-    const existingDoc = loadDevelopmentSeries(dataDir);
-    const outPath = writeDevelopmentSeries(
+    const existingDoc = await loadDevelopmentSeries(dataDir);
+    const outPath = await writeDevelopmentSeries(
       dataDir,
       mergeDevelopmentSeries(existingDoc, doc)
     );

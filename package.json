@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
+    "db:migrate:development": "node scripts/migrate-development-to-postgres.js",
     "ee:verify": "node earth-engine/verify-connection.js",
     "ee:extract": "node earth-engine/extract-development.js --write",
     "ee:codeeditor": "node earth-engine/extract-development.js --print-codeeditor"
@@ -16,6 +17,7 @@
   "dependencies": {
     "@google/earthengine": "^1.7.18",
     "better-sqlite3": "^12.8.0",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "pg": "^8.16.3"
   }
 }

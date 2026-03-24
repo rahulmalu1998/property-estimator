@@ -133,6 +133,10 @@ function ensureNews(areas, cities) {
 
 app.use(express.static(path.join(__dirname, "public")));
 
+app.get("/healthz", (_req, res) => {
+  res.json({ ok: true });
+});
+
 app.get("/api/areas", async (req, res) => {
   try {
     const { meta, cities, states, areas } = loadCatalog();
@@ -149,7 +153,7 @@ app.get("/api/areas", async (req, res) => {
       return res.status(404).json({ error: "No areas found for selected cities" });
     }
 
-    const devDoc = loadDevelopmentSeries(dataDir);
+    const devDoc = await loadDevelopmentSeries(dataDir);
     const investmentDoc = loadInvestmentMetrics(dataDir);
     const devZ = zScoresFromMetric(selectedAreas, devDoc, "builtUpGrowth10y");
     const investmentByKey = computeInvestmentScores(selectedAreas, devDoc, investmentDoc);
